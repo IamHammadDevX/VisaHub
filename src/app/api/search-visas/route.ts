@@ -13,14 +13,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = await postForm("/getvisadetail", {
-      value: "1",
-      origin_country: String(originCountry),
-      destination_country: String(destinationCountry),
+    // POST /visacountry with from_country/to_country returns ALL visas for route
+    const data = await postForm("/visacountry", {
+      from_country: String(originCountry),
+      to_country: String(destinationCountry),
     });
 
-    // API returns { status: true, country_visa: [...] }
-    const result = (data as { country_visa?: unknown[] }).country_visa ?? [];
+    // API returns { status: true, message: [visa1, visa2, ...] }
+    const result = (data as { message?: unknown[] }).message ?? [];
     return NextResponse.json(result);
   } catch (error: unknown) {
     const status =
@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
         : 500;
 
     if (status === 500) {
-      // Gracefully return empty for internal API errors (PHP errors, no data)
       return NextResponse.json([]);
     }
 

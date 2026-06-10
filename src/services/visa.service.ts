@@ -16,6 +16,7 @@ interface VughyVisaDetail {
   time_to_get_visa?: string;
   processing_time?: string;
   entry_type?: string;
+  visa_type_id?: string;
   description?: string;
 }
 
@@ -30,6 +31,7 @@ function normalizeVisa(raw: VughyVisaDetail): VisaCard {
 
   return {
     id: Number(raw.id ?? 0),
+    visaTypeId: Number(raw.visa_type_id ?? 0),
     visaType: raw.type_of_visa ?? raw.visa_type_name ?? raw.visa_type ?? "Unknown",
     visaFee,
     serviceFee,
@@ -37,6 +39,7 @@ function normalizeVisa(raw: VughyVisaDetail): VisaCard {
     processingTime: raw.time_to_get_visa ?? raw.processing_time ?? "N/A",
     validity: raw.visa_validity ?? "N/A",
     stayDuration: raw.length_of_stay ?? raw.stay_duration ?? "N/A",
+    entryType: raw.entry_type ?? "N/A",
     description: raw.description,
   };
 }

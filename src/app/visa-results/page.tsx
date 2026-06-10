@@ -2,11 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeft, Globe } from "lucide-react";
+import { ArrowLeft, Globe, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useVisaSearch } from "@/hooks/useVisaSearch";
+import { useCountries } from "@/hooks/useCountries";
 import { VisaCard } from "@/components/visa/visa-card";
 import { VisaCardSkeletonGrid } from "@/components/visa/visa-card-skeleton";
 import { ErrorState } from "@/components/visa/error-state";
@@ -17,6 +17,8 @@ function VisaResultsContent() {
   const origin = searchParams.get("origin");
   const destination = searchParams.get("destination");
 
+  const { data: countries } = useCountries();
+
   const params =
     origin && destination
       ? {
@@ -26,6 +28,11 @@ function VisaResultsContent() {
       : null;
 
   const { data: visas, isLoading, isError, error, refetch } = useVisaSearch(params);
+
+  const originName = countries?.find((c) => c.id === Number(origin))?.name;
+  const destName = countries?.find((c) => c.id === Number(destination))?.name;
+  const originFlag = countries?.find((c) => c.id === Number(origin))?.flag;
+  const destFlag = countries?.find((c) => c.id === Number(destination))?.flag;
 
   // No params provided
   if (!params) {
@@ -55,16 +62,28 @@ function VisaResultsContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="default" size="sm">
-              Search Results
-            </Badge>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1.5 text-sm">
+              <span className="text-lg">{originFlag}</span>
+              <span className="text-foreground font-medium">{originName || `Country #${origin}`}</span>
+            </div>
+            <MapPin className="h-4 w-4 text-primary/60" />
+            <div className="flex items-center gap-1.5 text-sm">
+              <span className="text-lg">{destFlag}</span>
+              <span className="text-foreground font-medium">{destName || `Country #${destination}`}</span>
+            </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Visa Options
+            {isLoading
+              ? "Searching visa options..."
+              : visas && visas.length > 0
+                ? `${visas.length} Visa Option${visas.length > 1 ? "s" : ""} Found`
+                : "Visa Options"}
           </h1>
           <p className="text-sm text-foreground-muted mt-1">
-            Showing available visas for the selected route
+            {originName && destName
+              ? `Available visas from ${originName} to ${destName}`
+              : "Showing available visas for the selected route"}
           </p>
         </div>
         <Link href="/">
@@ -95,9 +114,9 @@ function VisaResultsContent() {
 
       {/* Results */}
       {!isLoading && !isError && visas && visas.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {visas.map((visa, i) => (
-            <VisaCard key={visa.id} visa={visa} index={i} />
+            <VisaCard key={visa.visaTypeId} visa={visa} index={i} />
           ))}
         </div>
       )}
