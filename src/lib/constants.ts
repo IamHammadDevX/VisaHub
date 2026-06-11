@@ -17,17 +17,9 @@ export const NAV_LINKS = [
   { label: "Visa Types", href: "#visa-types" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "FAQ", href: "#faq" },
-  { label: "Contact", href: "#contact" },
 ] as const;
 
-export const FOOTER_LINKS = {
-  company: [
-    { label: "About Us", href: "#" },
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-    { label: "Contact", href: "#" },
-  ],
-} as const;
+export const FOOTER_LINKS = {} as const;
 
 export const DESTINATIONS = [
   {

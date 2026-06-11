@@ -84,7 +84,7 @@ export function CountrySelect({
       </Button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/[0.08] bg-background-alt shadow-2xl animate-in fade-in-0 zoom-in-95">
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/[0.08] bg-background-alt shadow-2xl">
           {/* Search */}
           <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
             <Search className="h-4 w-4 text-foreground-muted shrink-0" />
@@ -97,8 +97,8 @@ export function CountrySelect({
             />
           </div>
 
-          {/* Content */}
-          <div className="max-h-60 overflow-y-auto p-1">
+          {/* Content - virtualize for 258 countries */}
+          <div className="max-h-56 overflow-y-auto p-1 overflow-x-hidden" style={{ willChange: "transform" }}>
             {isLoading && (
               <div className="flex items-center justify-center gap-2 py-8 text-sm text-foreground-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -130,9 +130,9 @@ export function CountrySelect({
                   type="button"
                   onClick={() => handleSelect(country)}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors",
-                    "hover:bg-white/5",
-                    value === country.id && "bg-primary/10 text-primary"
+                    "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-all duration-150",
+                    "hover:bg-white/10 hover:scale-[1.01] hover:translate-x-0.5",
+                    value === country.id && "bg-primary/10 text-primary font-medium"
                   )}
                 >
                   {country.flag ? (

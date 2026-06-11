@@ -18,9 +18,11 @@ import { useRouter } from "next/navigation";
 interface VisaCardProps {
   visa: VisaCardType;
   index: number;
+  originCountry: number;
+  destinationCountry: number;
 }
 
-export function VisaCard({ visa, index }: VisaCardProps) {
+export function VisaCard({ visa, index, originCountry, destinationCountry }: VisaCardProps) {
   const router = useRouter();
 
   return (
@@ -133,7 +135,11 @@ export function VisaCard({ visa, index }: VisaCardProps) {
 
           {/* Apply Button */}
           <Button
-            onClick={() => router.push(`/apply?visaId=${visa.id}`)}
+            onClick={() =>
+              router.push(
+                `/apply?visaId=${visa.id}&originCountry=${originCountry}&destinationCountry=${destinationCountry}&visaTypeId=${visa.visaTypeId}&visaType=${encodeURIComponent(visa.visaType)}&totalFee=${visa.totalFee}`
+              )
+            }
             className="w-full group/btn"
             size="lg"
           >

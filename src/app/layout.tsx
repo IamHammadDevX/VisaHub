@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/providers";
+import { SuppressHydrationWarnings } from "@/components/shared/suppress-hydration-warnings";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
+        <SuppressHydrationWarnings />
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>
