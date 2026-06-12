@@ -16,3 +16,21 @@ export interface VisaSearchParams {
   originCountry: number;
   destinationCountry: number;
 }
+
+export interface VisaDocumentRequirement {
+  id: number;
+  name: string;
+}
+
+export interface VisaDocumentGroup {
+  id: number;
+  name: string;
+  documentIds: number[];
+  documents: VisaDocumentRequirement[];
+}
+
+export interface VisaDocumentParams {
+  visaId: number;
+  originCountry: number;
+  destinationCountry: number;
+}

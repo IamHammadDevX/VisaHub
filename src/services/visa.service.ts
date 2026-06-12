@@ -1,4 +1,9 @@
-import type { VisaCard, VisaSearchParams } from "@/types/visa";
+import type {
+  VisaCard,
+  VisaDocumentGroup,
+  VisaDocumentParams,
+  VisaSearchParams,
+} from "@/types/visa";
 
 interface VughyVisaDetail {
   id?: string;
@@ -60,4 +65,21 @@ export async function searchVisas(
 
   const data: VughyVisaDetail[] = await res.json();
   return data.map(normalizeVisa);
+}
+
+export async function fetchVisaDocuments(
+  params: VisaDocumentParams
+): Promise<VisaDocumentGroup[]> {
+  const res = await fetch("/api/visa-documents", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || `Documents failed: ${res.status}`);
+  }
+
+  return res.json();
 }
