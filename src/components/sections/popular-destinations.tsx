@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowDown, ArrowUp, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCountries } from "@/hooks/useCountries";
 import { FadeUp } from "@/components/animations/fade-up";
@@ -15,6 +15,20 @@ const LOAD_MORE_COUNT = 12;
 export function PopularDestinations() {
   const { data: countries, isLoading } = useCountries();
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Simulate loading delay when clicking Load More
+  function handleLoadMore() {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((c) => c + LOAD_MORE_COUNT);
+      setLoadingMore(false);
+    }, 600);
+  }
+
+  function handleShowLess() {
+    setVisibleCount(INITIAL_COUNT);
+  }
 
   if (isLoading) {
     return (
@@ -55,22 +69,17 @@ export function PopularDestinations() {
           </div>
         </FadeUp>
 
-        <StaggerContainer staggerDelay={0.04}>
+        <StaggerContainer staggerDelay={0.03}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {visible.map((country) => (
               <motion.div key={country.id} variants={staggerItemVariants}>
                 <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-300">
-                  {/* Country Flag */}
                   <div className="text-3xl mb-3 text-center">
                     {country.flag || "🌍"}
                   </div>
-
-                  {/* Country Name */}
                   <h3 className="text-sm font-semibold text-foreground text-center mb-3 group-hover:text-primary transition-colors line-clamp-1">
                     {country.name}
                   </h3>
-
-                  {/* Apply Button */}
                   <Link
                     href={`/visa-results?origin=${country.id}&destination=${country.id}`}
                     className="block w-full"
@@ -93,24 +102,33 @@ export function PopularDestinations() {
         {/* Load More / Show Less */}
         <FadeUp delay={0.2}>
           <div className="text-center mt-8">
-            {hasMore && (
+            {/* Loading more spinner */}
+            {loadingMore && (
+              <div className="flex flex-col items-center gap-3 py-6 animate-in fade-in duration-200">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm text-foreground-muted">Loading more countries...</span>
+              </div>
+            )}
+
+            {!loadingMore && hasMore && (
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => setVisibleCount((c) => c + LOAD_MORE_COUNT)}
+                onClick={handleLoadMore}
               >
-                Load More Countries
-                <ArrowDown className="ml-2 h-4 w-4" />
+                Load More Countries ({allCountries.length - visibleCount} remaining)
+                <Loader2 className="ml-2 h-4 w-4 hidden group-hover:animate-spin" />
               </Button>
             )}
-            {isAll && allCountries.length > INITIAL_COUNT && (
+
+            {!loadingMore && isAll && allCountries.length > INITIAL_COUNT && (
               <Button
                 variant="ghost"
                 size="lg"
-                onClick={() => setVisibleCount(INITIAL_COUNT)}
+                onClick={handleShowLess}
               >
                 Show Less
-                <ArrowUp className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 rotate-[-90deg]" />
               </Button>
             )}
           </div>
