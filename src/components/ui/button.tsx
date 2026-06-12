@@ -11,17 +11,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/35 hover:scale-[1.02] active:scale-[0.98]",
         secondary:
-          "bg-slate-100 text-foreground hover:bg-slate-200 border border-slate-200 hover:border-slate-300",
+          "bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-100 hover:border-violet-200",
         outline:
-          "border border-primary/40 text-primary hover:bg-primary/5 hover:border-primary",
+          "border border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-500",
         ghost:
-          "text-foreground-muted hover:text-foreground hover:bg-slate-100",
+          "text-violet-700 hover:text-violet-900 hover:bg-violet-50",
         link:
-          "text-primary underline-offset-4 hover:underline h-auto p-0",
+          "text-violet-700 underline-offset-4 hover:underline h-auto p-0",
         glass:
-          "bg-white/80 backdrop-blur-xl text-foreground border border-slate-200 hover:bg-white hover:border-slate-300 shadow-sm",
+          "bg-white/80 backdrop-blur-xl text-violet-700 border border-violet-100 hover:bg-white hover:border-violet-200 shadow-sm",
       },
       size: {
         default: "h-11 px-6 py-2",
