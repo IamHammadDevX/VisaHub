@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,21 +9,15 @@ import { FadeUp } from "@/components/animations/fade-up";
 import { StaggerContainer, staggerItemVariants } from "@/components/animations/stagger-container";
 import Link from "next/link";
 
-const INITIAL_COUNT = 12;
+const INITIAL_COUNT = 18;
 const LOAD_MORE_COUNT = 12;
 
 export function PopularDestinations() {
   const { data: countries, isLoading } = useCountries();
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Simulate loading delay when clicking Load More
   function handleLoadMore() {
-    setLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount((c) => c + LOAD_MORE_COUNT);
-      setLoadingMore(false);
-    }, 600);
+    setVisibleCount((c) => c + LOAD_MORE_COUNT);
   }
 
   function handleShowLess() {
@@ -102,26 +96,17 @@ export function PopularDestinations() {
         {/* Load More / Show Less */}
         <FadeUp delay={0.2}>
           <div className="text-center mt-8">
-            {/* Loading more spinner */}
-            {loadingMore && (
-              <div className="flex flex-col items-center gap-3 py-6 animate-in fade-in duration-200">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm text-foreground-muted">Loading more countries...</span>
-              </div>
-            )}
-
-            {!loadingMore && hasMore && (
+            {hasMore && (
               <Button
                 variant="secondary"
                 size="lg"
                 onClick={handleLoadMore}
               >
                 Load More Countries ({allCountries.length - visibleCount} remaining)
-                <Loader2 className="ml-2 h-4 w-4 hidden group-hover:animate-spin" />
               </Button>
             )}
 
-            {!loadingMore && isAll && allCountries.length > INITIAL_COUNT && (
+            {isAll && allCountries.length > INITIAL_COUNT && (
               <Button
                 variant="ghost"
                 size="lg"
