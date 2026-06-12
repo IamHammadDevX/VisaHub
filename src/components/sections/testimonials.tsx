@@ -26,7 +26,7 @@ export function Testimonials() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TESTIMONIALS.map((testimonial) => (
               <motion.div key={testimonial.name} variants={staggerItemVariants}>
-                <Card className="h-full">
+                <Card className="h-full shadow-sm">
                   <CardContent className="p-5">
                     <Quote className="h-5 w-5 text-primary/30 mb-3" />
                     <p className="text-sm text-foreground-muted mb-5 leading-relaxed">

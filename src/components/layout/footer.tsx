@@ -12,7 +12,7 @@ const socialIcons = [
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-white/[0.06]">
+    <footer className="relative border-t border-slate-200 bg-white">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
           <a href="/" className="flex items-center gap-2">
@@ -28,7 +28,7 @@ export function Footer() {
               <a
                 key={name}
                 href={href}
-                className="h-8 w-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-foreground-muted hover:text-foreground hover:bg-white/10 transition-all"
+                  className="h-8 w-8 rounded-lg border border-slate-200 flex items-center justify-center text-foreground-muted hover:text-foreground hover:bg-slate-100 hover:border-slate-300 transition-all"
                 aria-label={name}
               >
                 <Icon className="h-3.5 w-3.5" />

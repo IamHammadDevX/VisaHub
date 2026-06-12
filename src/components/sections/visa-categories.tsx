@@ -44,7 +44,7 @@ export function VisaCategories() {
               const Icon = iconMap[cat.icon] || Globe;
               return (
                 <motion.div key={cat.title} variants={staggerItemVariants}>
-                  <div className="group cursor-pointer rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-300 text-center">
+                  <div className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 hover:bg-white hover:border-primary/30 hover:shadow-lg transition-all duration-300 text-center">
                     <div className="h-10 w-10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300"
                       style={{ background: `${cat.color}15`, color: cat.color }}
                     >

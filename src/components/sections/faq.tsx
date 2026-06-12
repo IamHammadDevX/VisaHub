@@ -19,10 +19,10 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all duration-300 hover:border-white/[0.12]">
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-white/[0.02]"
+        className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-slate-50"
       >
         <span className="text-sm font-medium text-foreground pr-4">
           {question}

@@ -17,7 +17,7 @@ export function CTA() {
 
       <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <FadeUp>
-          <div className="rounded-3xl border border-primary/10 bg-primary/[0.02] p-10 md:p-14 text-center">
+          <div className="rounded-3xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 p-10 md:p-14 text-center">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
               Start Your Visa{" "}
               <span className="gradient-text">Application Today</span>
@@ -37,7 +37,7 @@ export function CTA() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-6 border-t border-white/5">
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-6 border-t border-slate-200">
               <div className="flex items-center gap-2 text-xs text-foreground-muted">
                 <Shield className="h-3.5 w-3.5 text-primary" />
                 Secure & Encrypted

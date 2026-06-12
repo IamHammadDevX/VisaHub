@@ -68,7 +68,7 @@ export function CountrySelect({
         aria-expanded={open}
         onClick={() => setOpen(!open)}
         className={cn(
-          "w-full justify-between h-13 rounded-xl text-sm border bg-white/[0.06] hover:bg-white/[0.1] border-white/[0.1] hover:border-white/[0.2] text-foreground",
+          "w-full justify-between h-13 rounded-xl text-sm border bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-slate-300 text-foreground",
           !value && "text-foreground-muted/50 font-normal"
         )}
       >
@@ -84,9 +84,9 @@ export function CountrySelect({
       </Button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-white/[0.08] bg-background-alt shadow-2xl">
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-2xl">
           {/* Search */}
-          <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
             <Search className="h-4 w-4 text-foreground-muted shrink-0" />
             <input
               ref={inputRef}
@@ -131,7 +131,7 @@ export function CountrySelect({
                   onClick={() => handleSelect(country)}
                   className={cn(
                     "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-all duration-150",
-                    "hover:bg-white/10 hover:scale-[1.01] hover:translate-x-0.5",
+                    "hover:bg-slate-100 hover:scale-[1.01] hover:translate-x-0.5",
                     value === country.id && "bg-primary/10 text-primary font-medium"
                   )}
                 >

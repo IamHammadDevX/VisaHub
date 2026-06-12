@@ -33,7 +33,7 @@ export function Navbar() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isScrolled
-          ? "bg-background/80 backdrop-blur-xl border-b border-white/[0.06]"
+          ? "bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm"
           : "bg-transparent"
       )}
     >
@@ -55,7 +55,7 @@ export function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="px-3 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
+                className="px-3 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors rounded-lg hover:bg-slate-100"
               >
                 {link.label}
               </a>
@@ -75,7 +75,7 @@ export function Navbar() {
           {/* Mobile Toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden relative h-9 w-9 rounded-lg flex items-center justify-center text-foreground hover:bg-white/5 transition-colors"
+            className="lg:hidden relative h-9 w-9 rounded-lg flex items-center justify-center text-foreground hover:bg-slate-100 transition-colors"
             aria-label="Toggle menu"
           >
             {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -91,7 +91,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
-            className="lg:hidden bg-background border-t border-white/[0.06] overflow-hidden"
+            className="lg:hidden bg-white border-t border-slate-200 overflow-hidden"
           >
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5">
               <nav className="flex flex-col gap-1 mb-5">
@@ -103,7 +103,7 @@ export function Navbar() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
                     onClick={() => setIsOpen(false)}
-                    className="px-3 py-2.5 text-foreground-muted hover:text-foreground hover:bg-white/5 rounded-lg transition-colors text-sm"
+                    className="px-3 py-2.5 text-foreground-muted hover:text-foreground hover:bg-slate-50 rounded-lg transition-colors text-sm"
                   >
                     {link.label}
                   </motion.a>

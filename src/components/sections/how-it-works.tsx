@@ -34,7 +34,7 @@ export function HowItWorks() {
               const Icon = iconMap[step.icon] || Search;
               return (
                 <motion.div key={step.step} variants={staggerItemVariants}>
-                  <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 group hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-300">
+                  <div className="relative rounded-2xl border border-slate-200 bg-white p-5 group hover:border-primary/30 hover:shadow-lg transition-all duration-300">
                     <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-bold">
                       {step.step}
                     </div>

@@ -67,7 +67,7 @@ export function PopularDestinations() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {visible.map((country) => (
               <motion.div key={country.id} variants={staggerItemVariants}>
-                <div className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-300">
+                <div className="group relative rounded-2xl border border-slate-200 bg-white p-4 hover:bg-white hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
                   <div className="text-3xl mb-3 text-center">
                     {country.flag || "🌍"}
                   </div>
@@ -81,7 +81,7 @@ export function PopularDestinations() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs rounded-full border-primary/30 text-primary hover:bg-primary hover:text-white transition-all duration-200"
+                      className="w-full text-xs rounded-full border-primary/40 text-primary hover:bg-primary hover:text-white transition-all duration-200"
                     >
                       Apply Visa
                       <ArrowRight className="ml-1 h-3 w-3" />

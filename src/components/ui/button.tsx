@@ -6,22 +6,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
         default:
           "bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]",
         secondary:
-          "bg-white/5 text-foreground hover:bg-white/10 border border-white/10 hover:border-white/20",
+          "bg-slate-100 text-foreground hover:bg-slate-200 border border-slate-200 hover:border-slate-300",
         outline:
-          "border border-primary/40 text-primary hover:bg-primary/10 hover:border-primary",
+          "border border-primary/40 text-primary hover:bg-primary/5 hover:border-primary",
         ghost:
-          "text-foreground-muted hover:text-foreground hover:bg-white/5",
+          "text-foreground-muted hover:text-foreground hover:bg-slate-100",
         link:
           "text-primary underline-offset-4 hover:underline h-auto p-0",
         glass:
-          "bg-white/5 backdrop-blur-xl text-foreground border border-white/10 hover:bg-white/10 hover:border-white/20",
+          "bg-white/80 backdrop-blur-xl text-foreground border border-slate-200 hover:bg-white hover:border-slate-300 shadow-sm",
       },
       size: {
         default: "h-11 px-6 py-2",
