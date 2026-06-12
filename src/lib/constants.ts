@@ -13,10 +13,10 @@ export const SITE_CONFIG = {
 } as const;
 
 export const NAV_LINKS = [
-  { label: "Destinations", href: "#destinations" },
-  { label: "Visa Types", href: "#visa-types" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Destinations", href: "/#destinations" },
+  { label: "Visa Types", href: "/#visa-types" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "FAQ", href: "/#faq" },
 ] as const;
 
 export const FOOTER_LINKS = {} as const;

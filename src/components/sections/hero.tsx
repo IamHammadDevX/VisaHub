@@ -6,7 +6,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center pt-20">
+    <section id="top" className="relative min-h-screen flex items-center pt-20">
       {/* Travel image background */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"

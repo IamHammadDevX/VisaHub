@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Search, ArrowRight, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -88,7 +88,12 @@ export function VisaSearchForm({ onSearch }: VisaSearchFormProps) {
         </div>
       </div>
 
-      <Button type="submit" size="lg" disabled={!isValid} className="w-full h-12 text-base">
+      <Button
+        type="submit"
+        size="lg"
+        disabled={!isValid}
+        className="w-full h-12 text-base shadow-lg shadow-violet-500/25 hover:shadow-violet-500/35 focus-visible:ring-violet-400"
+      >
         Search Visas
         <ArrowRight className="ml-2 h-5 w-5" />
       </Button>

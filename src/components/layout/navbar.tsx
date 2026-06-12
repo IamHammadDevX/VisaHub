@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
@@ -40,25 +41,25 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-bold">
               V
             </div>
             <span className="text-lg font-bold text-foreground">
               {SITE_CONFIG.name}
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="px-3 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors rounded-lg hover:bg-slate-100"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -67,8 +68,8 @@ export function Navbar() {
             <Button variant="ghost" size="sm">
               Login
             </Button>
-            <Button size="sm">
-              Apply Now
+            <Button size="sm" asChild>
+              <Link href="/#top">Apply Now</Link>
             </Button>
           </div>
 
@@ -96,25 +97,30 @@ export function Navbar() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5">
               <nav className="flex flex-col gap-1 mb-5">
                 {NAV_LINKS.map((link, i) => (
-                  <motion.a
+                  <motion.div
                     key={link.href}
-                    href={link.href}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    onClick={() => setIsOpen(false)}
-                    className="px-3 py-2.5 text-foreground-muted hover:text-foreground hover:bg-slate-50 rounded-lg transition-colors text-sm"
                   >
-                    {link.label}
-                  </motion.a>
+                    <Link
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2.5 text-foreground-muted hover:text-foreground hover:bg-slate-50 rounded-lg transition-colors text-sm"
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
                 ))}
               </nav>
               <div className="flex flex-col gap-2">
                 <Button variant="secondary" className="w-full justify-center">
                   Login
                 </Button>
-                <Button className="w-full justify-center">
-                  Apply Now
+                <Button className="w-full justify-center" asChild>
+                  <Link href="/#top" onClick={() => setIsOpen(false)}>
+                    Apply Now
+                  </Link>
                 </Button>
               </div>
             </div>
