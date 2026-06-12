@@ -2,22 +2,27 @@ import axios from "axios";
 
 const BASE_URL = "https://migrate.vughy.com/visaclapapi_yam/api";
 
-const API_KEY = process.env.VUGHY_API_KEY || "";
+function getApiKey(): string {
+  return process.env.VUGHY_API_KEY || "";
+}
 
-const client = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    Origin: "localhost",
-    "x-DomainKey": API_KEY,
-  },
-  timeout: 15000,
-});
+function createClient() {
+  return axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      Origin: "localhost",
+      "x-DomainKey": getApiKey(),
+    },
+    timeout: 20000,
+  });
+}
 
 /** POST with form-urlencoded body (API requires formdata, not JSON) */
 export async function postForm<T = unknown>(
   endpoint: string,
   params: Record<string, string>
 ): Promise<T> {
+  const client = createClient();
   const formBody = new URLSearchParams(params).toString();
   const { data } = await client.post<T>(endpoint, formBody, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -25,4 +30,4 @@ export async function postForm<T = unknown>(
   return data;
 }
 
-export default client;
+export default createClient();
