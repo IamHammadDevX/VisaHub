@@ -7,7 +7,7 @@ FROM node:18-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN NEXT_DISABLE_SWC_BINARY=1 NEXT_DISABLE_SWC=1 SCG_DISABLE=1 npm run build
 
 FROM node:18-slim AS runner
 WORKDIR /app
