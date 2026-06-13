@@ -74,14 +74,11 @@ export function sessionToApplication(
 
 export async function findApplicationByReference(referenceId: string) {
   const stripe = getStripe();
-  const escapedReference = referenceId.replace(/'/g, "\\'");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results = await (stripe.checkout.sessions as any).search({
-    query: `metadata['referenceId']:'${escapedReference}'`,
-    limit: 1,
-  });
-
-  const session = results.data[0];
+  // search() not available in this SDK version — use list() + filter
+  const results = await stripe.checkout.sessions.list({ limit: 100 });
+  const session = results.data.find(
+    (s) => s.metadata?.referenceId === referenceId
+  );
   return session ? sessionToApplication(session) : null;
 }
 
