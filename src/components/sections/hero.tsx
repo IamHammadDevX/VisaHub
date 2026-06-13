@@ -2,7 +2,6 @@
 
 import { Globe } from "lucide-react";
 import { VisaSearchForm } from "@/components/search/visa-search-form";
-import { SITE_CONFIG } from "@/lib/constants";
 
 export function HeroSection() {
   return (
@@ -12,7 +11,7 @@ export function HeroSection() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&q=80')",
+            "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=80')",
         }}
       />
       {/* White overlay */}
@@ -22,13 +21,13 @@ export function HeroSection() {
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-[1.05] mb-4 tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
-            Find Your Visa in{" "}
-            <span className="gradient-text">Seconds</span>
+            Your Dream Trip{" "}
+            <span className="gradient-text">Starts Here</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-base sm:text-lg text-foreground-muted max-w-xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            {SITE_CONFIG.description}
+            Compare visa requirements, apply in minutes, and track your application for 150+ countries — all in one place.
           </p>
 
           {/* Search Card */}
