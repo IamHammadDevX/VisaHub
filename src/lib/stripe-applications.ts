@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import type { BasicInfo, StoredApplication } from "@/types/application";
+import type { ApplicationStatus, BasicInfo, StoredApplication } from "@/types/application";
 
 export function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -49,6 +49,19 @@ export function sessionToApplication(
   const submittedAt = metadataValue(metadata, "submittedAt");
   const paymentPending = session.payment_status !== "paid";
 
+  // Determine status: prefer explicit metadata.status (set by admin)
+  // otherwise derive from payment + form submission state
+  const customStatus = metadataValue(metadata, "status");
+  const validStatuses: ApplicationStatus[] = ["payment_pending", "paid", "progress", "under_review", "completed"];
+  const derivedStatus: ApplicationStatus = paymentPending
+    ? "payment_pending"
+    : metadataValue(metadata, "formSubmitted") === "true"
+      ? "progress"
+      : "paid";
+  const status: ApplicationStatus = validStatuses.includes(customStatus as ApplicationStatus)
+    ? (customStatus as ApplicationStatus)
+    : derivedStatus;
+
   return {
     referenceId: metadataValue(metadata, "referenceId"),
     sessionId: session.id,
@@ -58,11 +71,7 @@ export function sessionToApplication(
     originCountry: metadataValue(metadata, "originCountry"),
     destinationCountry: metadataValue(metadata, "destinationCountry"),
     amount: (session.amount_total || 0) / 100,
-    status: paymentPending
-      ? "payment_pending"
-      : metadataValue(metadata, "formSubmitted") === "true"
-        ? "progress"
-        : "paid",
+    status,
     basicInfo,
     receiptSent: metadataValue(metadata, "receiptSent") === "true",
     createdAt: new Date(session.created * 1000).toISOString(),
