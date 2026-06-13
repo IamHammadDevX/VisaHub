@@ -1,7 +1,7 @@
 FROM node:18-slim AS deps
 WORKDIR /app
 COPY package.json ./
-RUN npm install --legacy-peer-deps
+RUN NEXT_DISABLE_SWC_BINARY=1 npm install --legacy-peer-deps
 
 FROM node:18-slim AS builder
 WORKDIR /app
