@@ -39,10 +39,10 @@ async function sendReceiptEmail(sessionId: string) {
       subject: `VisaHub receipt ${application.referenceId}`,
       html,
     });
-  } catch {
-    console.log(`[DEV] Would send receipt to ${application.basicInfo.email}`);
-    console.log(`[DEV] Track link: ${trackLink}`);
-    console.log(`[DEV] Detailed form link: ${formLink}`);
+    console.log(`[VisaHub] Receipt email sent to ${application.basicInfo.email}`);
+  } catch (emailErr) {
+    console.error(`[VisaHub] Failed to send receipt email for ${application.referenceId}:`, emailErr);
+    // Non-blocking — payment confirmation succeeds even if email fails
   }
 
   const updated = await stripe.checkout.sessions.update(sessionId, {

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Banknote,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Eye,
   FileText,
@@ -42,6 +44,8 @@ export default function AdminDashboard() {
   const [countryFilter, setCountryFilter] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState<AdminApp | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Build country ID → name map
   const countryMap = useMemo(() => {
@@ -233,6 +237,18 @@ export default function AdminDashboard() {
       return true;
     });
   }, [applications, search, dateFrom, dateTo, countryFilter, countryMap]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, dateFrom, dateTo, countryFilter]);
 
   function formatDate(dateStr?: string) {
     if (!dateStr) return "-";
@@ -427,7 +443,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {paginatedItems.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-12 text-center text-sm text-foreground-muted">
                       {hasFilters
@@ -436,7 +452,7 @@ export default function AdminDashboard() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((app) => {
+                  paginatedItems.map((app) => {
                     const status = effectiveStatus(app);
                     return (
                       <tr key={app.referenceId} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
@@ -531,6 +547,57 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {filtered.length > itemsPerPage && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                <p className="text-xs text-foreground-muted">
+                  Showing {(currentPage - 1) * itemsPerPage + 1}–
+                  {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 7) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 4) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNum = totalPages - 6 + i;
+                    } else {
+                      pageNum = currentPage - 3 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`inline-flex items-center justify-center h-8 w-8 rounded-lg text-xs font-medium transition-colors ${
+                          currentPage === pageNum
+                            ? "bg-primary text-white"
+                            : "text-foreground-muted hover:text-foreground hover:bg-slate-200/50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

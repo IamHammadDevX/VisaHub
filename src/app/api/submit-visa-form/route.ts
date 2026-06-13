@@ -62,9 +62,10 @@ export async function POST(req: NextRequest) {
         subject: `Detailed visa form submitted ${referenceId}`,
         html,
       });
-    } catch {
-      console.log(`[DEV] Would email detailed form for ${referenceId}`);
-      console.log(formData);
+      console.log(`[VisaHub] Detailed form email sent to ${recipients.join(", ")}`);
+    } catch (emailErr) {
+      console.error(`[VisaHub] Failed to send detailed form email for ${referenceId}:`, emailErr);
+      // Non-blocking — form submission succeeds even if email fails
     }
 
     const stripe = getStripe();

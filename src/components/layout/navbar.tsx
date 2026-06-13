@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
@@ -11,6 +12,8 @@ import { NAV_LINKS, SITE_CONFIG } from "@/lib/constants";
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith("/admin");
 
   React.useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -65,11 +68,13 @@ export function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2">
-            <a href="/admin">
-              <Button variant="ghost" size="sm">
-                Admin
-              </Button>
-            </a>
+            {!isAdminPage && (
+              <a href="/admin">
+                <Button variant="ghost" size="sm">
+                  Admin
+                </Button>
+              </a>
+            )}
             <Button size="sm" asChild>
               <Link href="/#top">Apply Now</Link>
             </Button>
@@ -116,11 +121,13 @@ export function Navbar() {
                 ))}
               </nav>
               <div className="flex flex-col gap-2">
-                <a href="/admin" onClick={() => setIsOpen(false)}>
-                  <Button variant="secondary" className="w-full justify-center">
-                    Admin
-                  </Button>
-                </a>
+                {!isAdminPage && (
+                  <a href="/admin" onClick={() => setIsOpen(false)}>
+                    <Button variant="secondary" className="w-full justify-center">
+                      Admin
+                    </Button>
+                  </a>
+                )}
                 <Button className="w-full justify-center" asChild>
                   <Link href="/#top" onClick={() => setIsOpen(false)}>
                     Apply Now
