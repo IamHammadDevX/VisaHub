@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Banknote,
-  Building2,
   CheckCircle2,
   Clock,
+  Eye,
   FileText,
   Globe,
   Loader2,
@@ -14,32 +14,69 @@ import {
   RefreshCw,
   Search,
   Shield,
-  Users,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { StoredApplication } from "@/types/application";
+import type { Country } from "@/types/country";
 
 type AdminApp = StoredApplication & { localStatus?: string };
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [applications, setApplications] = useState<AdminApp[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState<AdminApp | null>(null);
+
+  // Build country ID → name map
+  const countryMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    countries.forEach((c) => {
+      map[String(c.id)] = c.name;
+    });
+    return map;
+  }, [countries]);
+
+  function resolveCountry(idOrName: string): string {
+    return countryMap[idOrName] || idOrName || "-";
+  }
 
   useEffect(() => {
-    // Redirect if not logged in
     const authed = sessionStorage.getItem("vh_admin");
     if (!authed) {
       router.replace("/admin");
       return;
     }
+    fetchCountries();
     fetchApplications();
   }, [router]);
+
+  async function fetchCountries() {
+    try {
+      const res = await fetch("/api/countries");
+      if (res.ok) {
+        const data: Country[] = await res.json();
+        setCountries(data);
+      }
+    } catch {
+      // non-critical
+    }
+  }
 
   async function fetchApplications() {
     setLoading(true);
@@ -49,7 +86,6 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Failed to load applications");
       const data: StoredApplication[] = await res.json();
 
-      // Merge with localStorage overrides
       const merged: AdminApp[] = data.map((app) => {
         const stored = localStorage.getItem(`visaApp_${app.referenceId}`);
         if (stored) {
@@ -121,7 +157,6 @@ export default function AdminDashboard() {
   async function updateStatus(refId: string, newStatus: string) {
     setUpdating(refId);
     try {
-      // Save to localStorage
       const key = `visaApp_${refId}`;
       const existing = localStorage.getItem(key);
       const data = existing ? JSON.parse(existing) : {};
@@ -130,16 +165,12 @@ export default function AdminDashboard() {
       data.updatedAt = new Date().toISOString();
       localStorage.setItem(key, JSON.stringify(data));
 
-      // Also call API to update Stripe metadata
       await fetch("/api/admin/applications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ referenceId: refId, status: newStatus }),
-      }).catch(() => {
-        // Ignore API errors — localStorage is the source of truth
-      });
+      }).catch(() => {});
 
-      // Refresh
       await fetchApplications();
     } finally {
       setUpdating(null);
@@ -159,18 +190,77 @@ export default function AdminDashboard() {
   ).length;
   const totalRevenue = applications.reduce((sum, a) => sum + (a.amount || 0), 0);
 
-  const filtered = applications.filter((app) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      app.referenceId.toLowerCase().includes(q) ||
-      app.visaType.toLowerCase().includes(q) ||
-      app.originCountry.toLowerCase().includes(q) ||
-      app.destinationCountry.toLowerCase().includes(q) ||
-      app.basicInfo.fullName.toLowerCase().includes(q) ||
-      app.basicInfo.email.toLowerCase().includes(q)
-    );
-  });
+  // Filtered list
+  const filtered = useMemo(() => {
+    return applications.filter((app) => {
+      // Text search
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const originName = resolveCountry(app.originCountry).toLowerCase();
+        const destName = resolveCountry(app.destinationCountry).toLowerCase();
+        const match =
+          app.referenceId.toLowerCase().includes(q) ||
+          app.visaType.toLowerCase().includes(q) ||
+          originName.includes(q) ||
+          destName.includes(q) ||
+          app.basicInfo.fullName.toLowerCase().includes(q) ||
+          app.basicInfo.email.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+
+      // Date range
+      const created = new Date(app.createdAt);
+      if (dateFrom && created < new Date(dateFrom)) return false;
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        if (created > end) return false;
+      }
+
+      // Country filter (matches origin or destination)
+      if (countryFilter) {
+        const originName = resolveCountry(app.originCountry);
+        const destName = resolveCountry(app.destinationCountry);
+        const filterName =
+          countryMap[countryFilter] || countryFilter;
+        if (
+          originName !== filterName &&
+          destName !== filterName
+        )
+          return false;
+      }
+
+      return true;
+    });
+  }, [applications, search, dateFrom, dateTo, countryFilter, countryMap]);
+
+  function formatDate(dateStr?: string) {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  function formatDateFull(dateStr?: string) {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setCountryFilter("");
+  }
+
+  const hasFilters = search || dateFrom || dateTo || countryFilter;
 
   if (loading) {
     return (
@@ -245,15 +335,72 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
-          <Input
-            placeholder="Search by name, email, ref ID, visa type, country..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-11 pl-10"
-          />
+        {/* Filters */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted pointer-events-none" />
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 pl-9 text-sm"
+              />
+            </div>
+
+            {/* Date From */}
+            <div>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="h-10 text-sm"
+              />
+            </div>
+
+            {/* Date To */}
+            <div>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="h-10 text-sm"
+              />
+            </div>
+
+            {/* Country Filter */}
+            <div className="relative">
+              <select
+                value={countryFilter}
+                onChange={(e) => setCountryFilter(e.target.value)}
+                className="flex h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 appearance-none"
+              >
+                <option value="">All Countries</option>
+                {countries.map((c) => (
+                  <option key={c.id} value={String(c.id)}>
+                    {c.flag} {c.name}
+                  </option>
+                ))}
+              </select>
+              <Globe className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Clear filters */}
+          {hasFilters && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+              <p className="text-xs text-foreground-muted">
+                {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-xs text-primary hover:text-primary-dark font-medium transition-colors"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Error */}
@@ -275,14 +422,17 @@ export default function AdminDashboard() {
                   <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Route</th>
                   <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Amount</th>
                   <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Status</th>
+                  <th className="text-center px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Details</th>
                   <th className="text-right px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-sm text-foreground-muted">
-                      {search ? "No applications match your search." : "No applications yet."}
+                    <td colSpan={8} className="px-4 py-12 text-center text-sm text-foreground-muted">
+                      {hasFilters
+                        ? "No applications match your filters."
+                        : "No applications yet."}
                     </td>
                   </tr>
                 ) : (
@@ -307,15 +457,15 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-foreground-muted" />
+                            <FileText className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
                             <span className="text-sm text-foreground">{app.visaType}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
-                            <Globe className="h-3.5 w-3.5 text-foreground-muted" />
-                            <span className="text-xs text-foreground">
-                              {app.originCountry} → {app.destinationCountry}
+                            <Globe className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
+                            <span className="text-xs text-foreground whitespace-nowrap">
+                              {resolveCountry(app.originCountry)} → {resolveCountry(app.destinationCountry)}
                             </span>
                           </div>
                         </td>
@@ -326,6 +476,15 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-3">
                           {statusBadge(status)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => setSelectedApp(app)}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-primary hover:bg-primary/5 transition-colors"
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
@@ -375,6 +534,101 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Details Modal */}
+      <Dialog open={!!selectedApp} onOpenChange={(open) => !open && setSelectedApp(null)}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Application Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedApp && (
+            <div className="space-y-5">
+              {/* Reference */}
+              <div className="rounded-xl bg-primary/5 border border-primary/10 p-4 text-center">
+                <p className="text-xs text-foreground-muted uppercase tracking-wider mb-1">Reference ID</p>
+                <p className="font-mono text-lg font-bold text-primary tracking-wide">
+                  {selectedApp.referenceId}
+                </p>
+              </div>
+
+              {/* Personal Info */}
+              <div>
+                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Personal Information
+                </h4>
+                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+                  <Row label="Full Name" value={selectedApp.basicInfo.fullName} />
+                  <Row label="Email" value={selectedApp.basicInfo.email} />
+                  <Row label="Phone" value={`${selectedApp.basicInfo.phoneCountryCode || ""} ${selectedApp.basicInfo.phoneNumber || ""}`.trim() || "-"} />
+                  <Row label="Nationality" value={selectedApp.basicInfo.nationality} />
+                  <Row label="Date of Birth" value={formatDateFull(selectedApp.basicInfo.dateOfBirth)} />
+                  <Row label="Passport No." value={selectedApp.basicInfo.passportNumber} />
+                  <Row label="Travel Date" value={formatDateFull(selectedApp.basicInfo.travelDate)} />
+                </div>
+              </div>
+
+              {/* Visa Info */}
+              <div>
+                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Visa Information
+                </h4>
+                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+                  <Row label="Visa Type" value={selectedApp.visaType} highlight />
+                  <Row label="Origin" value={resolveCountry(selectedApp.originCountry)} />
+                  <Row label="Destination" value={resolveCountry(selectedApp.destinationCountry)} highlight />
+                  <Row label="Amount" value={`$${selectedApp.amount.toLocaleString()}.00`} highlight />
+                  <Row label="Status" value={selectedApp.status.replace("_", " ")} />
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div>
+                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  Timeline
+                </h4>
+                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+                  <Row label="Created" value={formatDateFull(selectedApp.createdAt)} />
+                  <Row label="Paid At" value={formatDateFull(selectedApp.paidAt)} />
+                  <Row label="Submitted" value={formatDateFull(selectedApp.submittedAt)} />
+                  <Row label="Receipt Sent" value={selectedApp.receiptSent ? "Yes" : "No"} />
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5">
+      <span className="text-xs text-foreground-muted">{label}</span>
+      <span
+        className={`text-sm text-right max-w-[60%] truncate ${
+          highlight
+            ? "font-semibold text-foreground"
+            : "text-foreground"
+        }`}
+      >
+        {value || "-"}
+      </span>
     </div>
   );
 }
