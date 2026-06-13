@@ -75,7 +75,8 @@ export function sessionToApplication(
 export async function findApplicationByReference(referenceId: string) {
   const stripe = getStripe();
   const escapedReference = referenceId.replace(/'/g, "\\'");
-  const results = await stripe.checkout.sessions.search({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const results = await (stripe.checkout.sessions as any).search({
     query: `metadata['referenceId']:'${escapedReference}'`,
     limit: 1,
   });
