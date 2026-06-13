@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApplication } from "@/lib/application-store";
+import { findApplicationByReference } from "@/lib/stripe-applications";
 
 export async function GET(req: NextRequest) {
   const ref = req.nextUrl.searchParams.get("ref");
@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Receipt ID is required" }, { status: 400 });
   }
 
-  const application = await getApplication(ref);
+  const application = await findApplicationByReference(ref);
   if (!application) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }

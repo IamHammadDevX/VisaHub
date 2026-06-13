@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildReceiptEmail } from "@/lib/email-template";
-import { getApplication, updateApplication } from "@/lib/application-store";
+import {
+  getStripe,
+  sessionToApplication,
+} from "@/lib/stripe-applications";
 
-async function sendReceiptEmail(referenceId: string) {
-  const application = await getApplication(referenceId);
-  if (!application || application.receiptSent) return application;
+async function sendReceiptEmail(sessionId: string) {
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const application = sessionToApplication(session);
+
+  if (application.receiptSent) return application;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const trackLink = `${baseUrl}/track?ref=${application.referenceId}`;
@@ -39,7 +45,15 @@ async function sendReceiptEmail(referenceId: string) {
     console.log(`[DEV] Detailed form link: ${formLink}`);
   }
 
-  return updateApplication(referenceId, { receiptSent: true });
+  const updated = await stripe.checkout.sessions.update(sessionId, {
+    metadata: {
+      ...(session.metadata || {}),
+      receiptSent: "true",
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  return sessionToApplication(updated);
 }
 
 export async function POST(req: NextRequest) {
@@ -53,30 +67,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const application = await getApplication(referenceId);
-    if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    }
-
-    let paid = false;
-
-    if (String(sessionId).startsWith("cs_dev_")) {
-      paid = process.env.NODE_ENV !== "production";
-    } else {
-      if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json(
-          { error: "Stripe is not configured" },
-          { status: 500 }
-        );
-      }
-
-      const { default: Stripe } = await import("stripe");
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-      const session = await stripe.checkout.sessions.retrieve(String(sessionId));
-      paid =
-        session.payment_status === "paid" &&
-        session.metadata?.referenceId === referenceId;
-    }
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(String(sessionId));
+    const paid =
+      session.payment_status === "paid" &&
+      session.metadata?.referenceId === referenceId;
 
     if (!paid) {
       return NextResponse.json(
@@ -85,13 +80,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await updateApplication(referenceId, {
-      sessionId: String(sessionId),
-      status: application.status === "payment_pending" ? "paid" : application.status,
-      paidAt: application.paidAt || new Date().toISOString(),
+    await stripe.checkout.sessions.update(String(sessionId), {
+      metadata: {
+        ...(session.metadata || {}),
+        paidAt: session.metadata?.paidAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
     });
 
-    const updated = await sendReceiptEmail(referenceId);
+    const updated = await sendReceiptEmail(String(sessionId));
     return NextResponse.json(updated);
   } catch (error) {
     const message =

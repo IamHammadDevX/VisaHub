@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  createApplication,
   generateReferenceId,
-} from "@/lib/application-store";
+  getStripe,
+} from "@/lib/stripe-applications";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,38 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     const referenceId = generateReferenceId();
-
-    if (!process.env.STRIPE_SECRET_KEY) {
-      if (process.env.NODE_ENV === "production") {
-        return NextResponse.json(
-          { error: "Stripe is not configured" },
-          { status: 500 }
-        );
-      }
-
-      const mockId = "cs_dev_" + Date.now();
-      await createApplication({
-        referenceId,
-        sessionId: mockId,
-        visaId: String(visaId || "0"),
-        visaTypeId: String(visaTypeId || ""),
-        visaType: String(visaType || "Visa"),
-        originCountry: String(originCountry || ""),
-        destinationCountry: String(destinationCountry || ""),
-        amount: Number(amount),
-        basicInfo,
-      });
-
-      return NextResponse.json({
-        id: mockId,
-        url: `/payment/success?session_id=${mockId}&ref=${referenceId}`,
-        referenceId,
-        mock: true,
-      });
-    }
-
-    const { default: Stripe } = await import("stripe");
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = getStripe();
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -88,21 +57,21 @@ export async function POST(req: NextRequest) {
         originCountry: String(originCountry || ""),
         destinationCountry: String(destinationCountry || ""),
         visaType: String(visaType || ""),
+        fullName: String(basicInfo.fullName || ""),
+        email: String(basicInfo.email || ""),
+        phoneCountryCode: String(basicInfo.phoneCountryCode || ""),
+        phoneNumber: String(basicInfo.phoneNumber || ""),
+        nationality: String(basicInfo.nationality || ""),
+        dateOfBirth: String(basicInfo.dateOfBirth || ""),
+        passportNumber: String(basicInfo.passportNumber || ""),
+        travelDate: String(basicInfo.travelDate || ""),
+        notes: String(basicInfo.notes || ""),
+        formSubmitted: "false",
+        receiptSent: "false",
       },
+      customer_email: String(basicInfo.email || ""),
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}&ref=${referenceId}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/payment/cancel`,
-    });
-
-    await createApplication({
-      referenceId,
-      sessionId: session.id,
-      visaId: String(visaId || "0"),
-      visaTypeId: String(visaTypeId || ""),
-      visaType: String(visaType || "Visa"),
-      originCountry: String(originCountry || ""),
-      destinationCountry: String(destinationCountry || ""),
-      amount: Number(amount),
-      basicInfo,
     });
 
     return NextResponse.json({
