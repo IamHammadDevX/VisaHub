@@ -150,8 +150,11 @@ function DetailsContent() {
         if (!referenceId) throw new Error("Receipt ID is required");
 
         const appRes = await fetch(`/api/applications?ref=${encodeURIComponent(referenceId)}`);
+        if (!appRes.ok) {
+          const errBody = await appRes.json().catch(() => ({ error: "Failed to load application" }));
+          throw new Error(errBody.error || "Application not found");
+        }
         const appData = await appRes.json();
-        if (!appRes.ok) throw new Error(appData.error || "Application not found");
         if (appData.status === "payment_pending") {
           throw new Error("Payment must be completed before the detailed visa form.");
         }
