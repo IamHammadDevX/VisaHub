@@ -3,30 +3,7 @@ import {
   findApplicationByReference,
   getStripe,
 } from "@/lib/stripe-applications";
-
-function buildDetailedFormEmail({
-  referenceId,
-  formData,
-}: {
-  referenceId: string;
-  formData: Record<string, string>;
-}) {
-  const rows = Object.entries(formData)
-    .map(
-      ([key, value]) =>
-        `<tr><td style="padding:8px;border:1px solid #e2e8f0;font-weight:600">${key}</td><td style="padding:8px;border:1px solid #e2e8f0">${value || "-"}</td></tr>`
-    )
-    .join("");
-
-  return `<!DOCTYPE html>
-<html>
-<body style="font-family:Arial,sans-serif;color:#0f172a">
-  <h2>Detailed Visa Form Submitted</h2>
-  <p><strong>Receipt ID:</strong> ${referenceId}</p>
-  <table style="border-collapse:collapse;width:100%;max-width:720px">${rows}</table>
-</body>
-</html>`;
-}
+import { buildDetailedFormEmail } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,7 +28,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const html = buildDetailedFormEmail({ referenceId, formData });
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const trackLink = `${baseUrl}/track?ref=${referenceId}`;
+    const phone = `${existing.basicInfo.phoneCountryCode || ""} ${existing.basicInfo.phoneNumber || ""}`.trim();
+
+    const html = buildDetailedFormEmail({
+      referenceId,
+      visaType: existing.visaType,
+      amount: existing.amount,
+      originCountry: existing.originCountry,
+      destinationCountry: existing.destinationCountry,
+      applicantName: existing.basicInfo.fullName,
+      nationality: existing.basicInfo.nationality,
+      passportNumber: existing.basicInfo.passportNumber,
+      travelDate: existing.basicInfo.travelDate,
+      dateOfBirth: existing.basicInfo.dateOfBirth,
+      phone: phone || undefined,
+      email: existing.basicInfo.email,
+      formData,
+      trackLink,
+    });
     const recipients = [
       existing.basicInfo.email,
       process.env.APPLICATION_ADMIN_EMAIL,
