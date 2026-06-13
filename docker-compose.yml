@@ -1,0 +1,17 @@
+services:
+  visahub:
+    build:
+      context: /home/ubuntu/visahub
+      dockerfile: Dockerfile
+    container_name: visahub
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    env_file:
+      - /home/ubuntu/visahub/.env
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
