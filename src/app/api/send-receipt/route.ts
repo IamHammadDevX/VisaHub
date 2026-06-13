@@ -3,7 +3,17 @@ import { buildReceiptEmail } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
   try {
-    const { referenceId, visaType, amount, date, visaId, email, originCountry, destinationCountry } =
+    const {
+      referenceId,
+      visaType,
+      amount,
+      date,
+      email,
+      originCountry,
+      destinationCountry,
+      applicantName,
+      phone,
+    } =
       await req.json();
 
     if (!email || !referenceId) {
@@ -22,9 +32,10 @@ export async function POST(req: NextRequest) {
       amount: Number(amount || 0),
       date: date || new Date().toISOString(),
       trackLink,
-      visaId: String(visaId || ""),
       originCountry: String(originCountry || ""),
       destinationCountry: String(destinationCountry || ""),
+      applicantName,
+      phone,
     });
 
     // Try Resend, fall back gracefully if not configured

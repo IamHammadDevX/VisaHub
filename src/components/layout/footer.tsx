@@ -1,6 +1,7 @@
 "use client";
 
 import { Globe, MessageCircle, Camera, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/constants";
 
 const socialIcons = [
@@ -15,14 +16,14 @@ export function Footer() {
     <footer className="relative border-t border-slate-200 bg-white">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-bold">
               V
             </div>
             <span className="text-lg font-bold text-foreground">
               {SITE_CONFIG.name}
             </span>
-          </a>
+          </Link>
           <div className="flex gap-2">
             {socialIcons.map(({ name, icon: Icon, href }) => (
               <a

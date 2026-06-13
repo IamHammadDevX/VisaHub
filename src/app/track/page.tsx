@@ -3,99 +3,109 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  ArrowLeft,
-  Search,
-  Loader2,
-  Shield,
-  CreditCard,
-  Clock,
-  CalendarDays,
-  BadgeCheck,
   AlertTriangle,
+  ArrowLeft,
+  BadgeCheck,
+  CalendarDays,
+  Clock,
   Copy,
+  CreditCard,
+  FileText,
+  Loader2,
+  Search,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
-interface AppData {
-  referenceId: string;
-  visaType: string;
-  visaId: string;
-  originCountry: string;
-  destinationCountry: string;
-  amount: number;
-  status: string;
-  date: string;
-  formData: Record<string, string>;
-}
+import type { StoredApplication } from "@/types/application";
 
 function TrackContent() {
   const searchParams = useSearchParams();
-  const urlRef = searchParams.get("ref");
-
-  const [searchRef, setSearchRef] = useState(urlRef || "");
-  const [appData, setAppData] = useState<AppData | null>(null);
-  const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const urlRef = searchParams.get("ref") || "";
+  const [searchRef, setSearchRef] = useState(urlRef);
+  const [application, setApplication] = useState<StoredApplication | null>(null);
+  const [searched, setSearched] = useState(Boolean(urlRef));
+  const [loading, setLoading] = useState(Boolean(urlRef));
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (urlRef) {
-      handleSearch(urlRef);
+    async function loadFromUrl() {
+      if (!urlRef) return;
+
+      try {
+        const res = await fetch(`/api/applications?ref=${encodeURIComponent(urlRef)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Application not found");
+        setApplication(data);
+      } catch {
+        setApplication(null);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    void loadFromUrl();
   }, [urlRef]);
 
-  function handleSearch(refToUse?: string) {
+  async function handleSearch(refToUse?: string) {
     const ref = (refToUse || searchRef).trim().toUpperCase();
     setSearched(true);
     setLoading(true);
+    setApplication(null);
 
     if (!ref) {
-      setAppData(null);
       setLoading(false);
       return;
     }
 
-    // Check sessionStorage for the application
-    const stored = sessionStorage.getItem(`visaApp_${ref}`);
-    if (stored) {
-      setAppData(JSON.parse(stored));
-    } else {
-      setAppData(null);
+    try {
+      const res = await fetch(`/api/applications?ref=${encodeURIComponent(ref)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Application not found");
+      setApplication(data);
+    } catch {
+      setApplication(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function copyRef() {
-    if (appData?.referenceId) {
-      navigator.clipboard.writeText(appData.referenceId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    if (!application?.referenceId) return;
+    navigator.clipboard.writeText(application.referenceId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return (
-          <Badge variant="success" size="lg" className="gap-1.5">
-            <BadgeCheck className="h-3.5 w-3.5" />
-            Confirmed
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge variant="warning" size="lg" className="gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            Pending
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  function statusBadge(status: string) {
+    if (status === "progress") {
+      return (
+        <Badge variant="warning" size="lg" className="gap-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          Progress
+        </Badge>
+      );
     }
-  };
+    if (status === "paid") {
+      return (
+        <Badge variant="success" size="lg" className="gap-1.5">
+          <CreditCard className="h-3.5 w-3.5" />
+          Paid
+        </Badge>
+      );
+    }
+    if (status === "under_review") {
+      return (
+        <Badge variant="default" size="lg" className="gap-1.5">
+          <Shield className="h-3.5 w-3.5" />
+          Under Review
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">{status.replace("_", " ")}</Badge>;
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-8">
@@ -115,221 +125,176 @@ function TrackContent() {
           Track Your Application
         </h1>
         <p className="text-sm text-foreground-muted max-w-md mx-auto">
-          Enter your reference ID to check the status of your visa application. No login required.
+          Enter your receipt ID. No login required.
         </p>
       </div>
 
-      {/* Search Box */}
       <div className="flex gap-2 mb-8">
         <Input
-          placeholder="Enter reference ID (e.g. VH-XXXX-XXXX)"
+          placeholder="VH-XXXX-XXXX"
           value={searchRef}
           onChange={(e) => setSearchRef(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="h-12 text-sm font-mono text-center uppercase tracking-widest"
         />
         <Button onClick={() => handleSearch()} disabled={loading} size="lg">
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Search className="h-4 w-4" />
-          )}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </Button>
       </div>
 
-      {/* Not Found */}
-      {searched && !loading && !appData && searchRef && (
-        <div className="rounded-2xl border border-amber-500/10 bg-amber-500/[0.03] p-8 text-center">
-          <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="h-7 w-7 text-amber-400" />
+      {searched && !loading && !application && searchRef && (
+        <div className="rounded-2xl border border-amber-100 bg-white p-8 text-center shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="h-7 w-7 text-amber-500" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
             Application Not Found
           </h3>
           <p className="text-sm text-foreground-muted max-w-sm mx-auto">
-            No application found with reference ID &ldquo;{searchRef}&rdquo;. Please check and try again.
+            No application found with receipt ID &quot;{searchRef}&quot;.
           </p>
         </div>
       )}
 
-      {/* Empty Search */}
-      {searched && !loading && !searchRef && (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
-          <p className="text-sm text-foreground-muted">
-            Enter a reference ID above to track your application.
-          </p>
-        </div>
-      )}
-
-      {/* Application Found */}
-      {appData && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          {/* Status Header */}
-          <div className="rounded-2xl border border-green-500/10 bg-green-500/[0.03] p-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-              <Shield className="h-6 w-6 text-green-400" />
+      {application && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-green-100 bg-white p-6 flex items-center gap-4 shadow-sm">
+            <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+              <Shield className="h-6 w-6 text-green-600" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h3 className="text-lg font-semibold text-foreground">
-                  {appData.visaType}
+                  {application.visaType}
                 </h3>
-                {getStatusBadge(appData.status)}
+                {statusBadge(application.status)}
               </div>
               <p className="text-xs text-foreground-muted">
-                Application is being processed. You&apos;ll receive email updates.
+                Applicant: {application.basicInfo.fullName}
               </p>
             </div>
           </div>
 
-          {/* Details Card */}
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-foreground-muted">Reference</span>
+                <span className="text-xs text-foreground-muted">Receipt</span>
                 <span className="text-sm font-mono font-bold text-foreground">
-                  {appData.referenceId}
+                  {application.referenceId}
                 </span>
                 <button
                   onClick={copyRef}
-                  className="p-1 rounded-md hover:bg-white/10 transition-colors"
+                  className="p-1 rounded-md hover:bg-slate-100 transition-colors"
+                  aria-label="Copy receipt ID"
                 >
                   <Copy className="h-3 w-3 text-foreground-muted" />
                 </button>
               </div>
-              {copied && (
-                <span className="text-xs text-green-400 animate-in fade-in">
-                  Copied!
-                </span>
-              )}
+              {copied && <span className="text-xs text-green-600">Copied</span>}
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-foreground-muted text-xs">Visa Type</span>
-                <p className="text-foreground font-medium mt-0.5">
-                  {appData.visaType}
-                </p>
-              </div>
-              <div>
-                <span className="text-foreground-muted text-xs">Amount Paid</span>
-                <p className="text-foreground font-bold mt-0.5">
-                  ${appData.amount.toLocaleString()}.00
-                </p>
-              </div>
-              <div>
-                <span className="text-foreground-muted text-xs flex items-center gap-1.5">
-                  <CalendarDays className="h-3 w-3" />
-                  Date
-                </span>
-                <p className="text-foreground mt-0.5">
-                  {new Date(appData.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-              <div>
-                <span className="text-foreground-muted text-xs flex items-center gap-1.5">
-                  <CreditCard className="h-3 w-3" />
-                  Payment
-                </span>
-                <p className="text-foreground mt-0.5">Paid</p>
-              </div>
+              <Detail label="Visa Type" value={application.visaType} />
+              <Detail label="Amount Paid" value={`$${application.amount.toLocaleString()}.00`} strong />
+              <Detail
+                label="Date"
+                value={new Date(application.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                icon={<CalendarDays className="h-3 w-3" />}
+              />
+              <Detail label="Payment" value={application.paidAt ? "Paid" : "Pending"} />
+              <Detail label="Email" value={application.basicInfo.email} />
+              <Detail
+                label="Phone"
+                value={`${application.basicInfo.phoneCountryCode} ${application.basicInfo.phoneNumber}`}
+              />
             </div>
 
-            {/* Form Data Summary */}
-            {appData.formData && Object.keys(appData.formData).length > 0 && (
-              <div className="border-t border-white/[0.06] mt-4 pt-4">
-                <span className="text-xs text-foreground-muted mb-2 block">
-                  Application Details
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  {Object.entries(appData.formData).map(([key, val]) => (
-                    <div key={key}>
-                      <span className="text-foreground-muted capitalize">
-                        {key}
-                      </span>
-                      <p className="text-foreground">{val || "-"}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {application.status === "paid" && (
+              <Link href={`/apply/details?ref=${application.referenceId}`}>
+                <Button className="w-full mt-6">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Complete Detailed Visa Form
+                </Button>
+              </Link>
             )}
           </div>
 
-          {/* Timeline */}
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h4 className="text-sm font-semibold text-foreground mb-4">
               Application Timeline
             </h4>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-green-400" />
-                  <div className="w-0.5 flex-1 bg-white/[0.08]" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Application Submitted
-                  </p>
-                  <p className="text-xs text-foreground-muted">
-                    {new Date(appData.date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-primary/30" />
-                  <div className="w-0.5 flex-1 bg-white/[0.08]" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground-muted">
-                    Payment Confirmed
-                  </p>
-                  <p className="text-xs text-foreground-muted">
-                    {new Date(appData.date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-white/[0.12]" />
-                  <div className="w-0.5 flex-1 bg-white/[0.04]" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground-muted">
-                    Under Review
-                  </p>
-                  <p className="text-xs text-foreground-muted">Pending</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-white/[0.06]" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground-muted">
-                    Decision Made
-                  </p>
-                  <p className="text-xs text-foreground-muted">
-                    Within 24 hours
-                  </p>
-                </div>
-              </div>
-            </div>
+            <TimelineItem done title="Basic Information Submitted" date={application.createdAt} />
+            <TimelineItem done={!!application.paidAt} title="Payment Confirmed" date={application.paidAt} />
+            <TimelineItem done={!!application.submittedAt} title="Detailed Visa Form Submitted" date={application.submittedAt} />
+            <TimelineItem done={application.status === "under_review" || application.status === "completed"} title="Team Review" date={undefined} />
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Detail({
+  label,
+  value,
+  strong,
+  icon,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <span className="text-foreground-muted text-xs flex items-center gap-1.5">
+        {icon}
+        {label}
+      </span>
+      <p className={strong ? "text-foreground font-bold mt-0.5" : "text-foreground mt-0.5"}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function TimelineItem({
+  done,
+  title,
+  date,
+}: {
+  done: boolean;
+  title: string;
+  date?: string;
+}) {
+  return (
+    <div className="flex gap-3 pb-4 last:pb-0">
+      <div className="pt-1">
+        {done ? (
+          <BadgeCheck className="h-4 w-4 text-green-600" />
+        ) : (
+          <div className="h-4 w-4 rounded-full border border-slate-300" />
+        )}
+      </div>
+      <div>
+        <p className={done ? "text-sm font-medium text-foreground" : "text-sm font-medium text-foreground-muted"}>
+          {title}
+        </p>
+        <p className="text-xs text-foreground-muted">
+          {date
+            ? new Date(date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Pending"}
+        </p>
+      </div>
     </div>
   );
 }

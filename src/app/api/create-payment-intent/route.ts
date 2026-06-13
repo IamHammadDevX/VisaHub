@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-
-function generateRefId(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "";
-  for (let i = 0; i < 8; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `VH-${id.slice(0, 4)}-${id.slice(4)}`;
-}
+import {
+  createApplication,
+  generateReferenceId,
+} from "@/lib/application-store";
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, visaType, visaId, originCountry, destinationCountry, formData } =
+    const {
+      amount,
+      visaType,
+      visaId,
+      visaTypeId,
+      originCountry,
+      destinationCountry,
+      basicInfo,
+    } =
       await req.json();
 
     if (!amount || amount <= 0) {
@@ -21,22 +24,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const referenceId = generateRefId();
+    if (!basicInfo?.fullName || !basicInfo?.email || !basicInfo?.phoneNumber) {
+      return NextResponse.json(
+        { error: "Basic applicant information is required" },
+        { status: 400 }
+      );
+    }
 
-    // Lazy-load Stripe
-    let stripe;
-    try {
-      const Stripe = require("stripe");
-      stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    } catch {
+    const referenceId = generateReferenceId();
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "Stripe is not configured" },
+          { status: 500 }
+        );
+      }
+
       const mockId = "cs_dev_" + Date.now();
+      await createApplication({
+        referenceId,
+        sessionId: mockId,
+        visaId: String(visaId || "0"),
+        visaTypeId: String(visaTypeId || ""),
+        visaType: String(visaType || "Visa"),
+        originCountry: String(originCountry || ""),
+        destinationCountry: String(destinationCountry || ""),
+        amount: Number(amount),
+        basicInfo,
+      });
+
       return NextResponse.json({
         id: mockId,
-        url: `/payment/success?session_id=${mockId}&ref=${referenceId}&amount=${amount}&visaType=${encodeURIComponent(visaType || "")}&visaId=${visaId}`,
+        url: `/payment/success?session_id=${mockId}&ref=${referenceId}`,
         referenceId,
         mock: true,
       });
     }
+
+    const { default: Stripe } = await import("stripe");
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -57,13 +84,25 @@ export async function POST(req: NextRequest) {
       metadata: {
         referenceId,
         visaId: String(visaId || ""),
+        visaTypeId: String(visaTypeId || ""),
         originCountry: String(originCountry || ""),
         destinationCountry: String(destinationCountry || ""),
         visaType: String(visaType || ""),
-        formData: JSON.stringify(formData || {}),
       },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}&ref=${referenceId}&amount=${amount}&visaType=${encodeURIComponent(visaType || "")}&visaId=${visaId}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}&ref=${referenceId}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/payment/cancel`,
+    });
+
+    await createApplication({
+      referenceId,
+      sessionId: session.id,
+      visaId: String(visaId || "0"),
+      visaTypeId: String(visaTypeId || ""),
+      visaType: String(visaType || "Visa"),
+      originCountry: String(originCountry || ""),
+      destinationCountry: String(destinationCountry || ""),
+      amount: Number(amount),
+      basicInfo,
     });
 
     return NextResponse.json({
