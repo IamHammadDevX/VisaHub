@@ -32,6 +32,9 @@ function SuccessContent() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Payment could not be confirmed");
         setApplication(data);
+
+        // Save to localStorage for admin dashboard
+        localStorage.setItem(`visaApp_${referenceId}`, JSON.stringify(data));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Payment could not be confirmed");
       } finally {

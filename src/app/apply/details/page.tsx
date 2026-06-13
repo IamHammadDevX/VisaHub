@@ -208,6 +208,18 @@ function DetailsContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit form");
       setSubmitted(true);
+
+      // Update localStorage with submitted status
+      const key = `visaApp_${referenceId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        parsed.status = "progress";
+        parsed.localStatus = "progress";
+        parsed.submittedAt = new Date().toISOString();
+        parsed.detailedForm = formValues;
+        localStorage.setItem(key, JSON.stringify(parsed));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit form");
     } finally {

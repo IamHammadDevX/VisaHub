@@ -65,9 +65,11 @@ export function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              Login
-            </Button>
+            <a href="/admin">
+              <Button variant="ghost" size="sm">
+                Admin
+              </Button>
+            </a>
             <Button size="sm" asChild>
               <Link href="/#top">Apply Now</Link>
             </Button>
@@ -114,9 +116,11 @@ export function Navbar() {
                 ))}
               </nav>
               <div className="flex flex-col gap-2">
-                <Button variant="secondary" className="w-full justify-center">
-                  Login
-                </Button>
+                <a href="/admin" onClick={() => setIsOpen(false)}>
+                  <Button variant="secondary" className="w-full justify-center">
+                    Admin
+                  </Button>
+                </a>
                 <Button className="w-full justify-center" asChild>
                   <Link href="/#top" onClick={() => setIsOpen(false)}>
                     Apply Now

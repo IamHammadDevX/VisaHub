@@ -38,6 +38,18 @@ function TrackContent() {
         const res = await fetch(`/api/applications?ref=${encodeURIComponent(urlRef)}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Application not found");
+
+        // Check localStorage for status overrides (set by admin)
+        const stored = localStorage.getItem(`visaApp_${urlRef}`);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.localStatus || parsed.status) {
+              data.status = parsed.localStatus || parsed.status;
+            }
+          } catch { /* ignore */ }
+        }
+
         setApplication(data);
       } catch {
         setApplication(null);
@@ -64,6 +76,18 @@ function TrackContent() {
       const res = await fetch(`/api/applications?ref=${encodeURIComponent(ref)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Application not found");
+
+      // Check localStorage for status overrides (set by admin)
+      const stored = localStorage.getItem(`visaApp_${ref}`);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.localStatus || parsed.status) {
+            data.status = parsed.localStatus || parsed.status;
+          }
+        } catch { /* ignore */ }
+      }
+
       setApplication(data);
     } catch {
       setApplication(null);
