@@ -51,6 +51,9 @@ function ApplyContent() {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const maxDob = yesterday.toISOString().split("T")[0];
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minTravel = tomorrow.toISOString().split("T")[0];
 
   const isValid = useMemo(
     () =>
@@ -232,6 +235,7 @@ function ApplyContent() {
               type="date"
               value={basicInfo.travelDate}
               onChange={(e) => updateField("travelDate", e.target.value)}
+              min={minTravel}
               required
             />
           </Field>
