@@ -47,6 +47,11 @@ function ApplyContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const maxDob = yesterday.toISOString().split("T")[0];
+
   const isValid = useMemo(
     () =>
       basicInfo.fullName &&
@@ -208,6 +213,7 @@ function ApplyContent() {
               type="date"
               value={basicInfo.dateOfBirth}
               onChange={(e) => updateField("dateOfBirth", e.target.value)}
+              max={maxDob}
               required
             />
           </Field>
