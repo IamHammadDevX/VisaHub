@@ -253,8 +253,8 @@ function TrackContent() {
             )}
           </div>
 
-          {/* Admin Notes */}
-          {application.adminNotes && (
+          {/* Admin Notes — only show when unresolved (not completed) */}
+          {application.adminNotes && application.status !== "completed" && (
             <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-8 w-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
