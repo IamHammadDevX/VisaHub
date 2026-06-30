@@ -13,6 +13,7 @@ import {
   Globe,
   Loader2,
   LogOut,
+  Phone,
   RefreshCw,
   Search,
   Shield,
@@ -202,13 +203,16 @@ export default function AdminDashboard() {
         const q = search.toLowerCase();
         const originName = resolveCountry(app.originCountry).toLowerCase();
         const destName = resolveCountry(app.destinationCountry).toLowerCase();
+        const phone = `${app.basicInfo.phoneCountryCode || ""}${app.basicInfo.phoneNumber || ""}`;
         const match =
           app.referenceId.toLowerCase().includes(q) ||
           app.visaType.toLowerCase().includes(q) ||
           originName.includes(q) ||
           destName.includes(q) ||
           app.basicInfo.fullName.toLowerCase().includes(q) ||
-          app.basicInfo.email.toLowerCase().includes(q);
+          app.basicInfo.email.toLowerCase().includes(q) ||
+          app.basicInfo.phoneNumber.includes(q) ||
+          phone.includes(q);
         if (!match) return false;
       }
 
@@ -358,7 +362,7 @@ export default function AdminDashboard() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted pointer-events-none" />
               <Input
-                placeholder="Search..."
+                placeholder="Search name, email, phone..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-10 pl-9 text-sm"
@@ -426,26 +430,145 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Applications Table */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        {/* Applications — Mobile Cards */}
+        <div className="lg:hidden space-y-4">
+          {paginatedItems.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+              <FileText className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm text-foreground-muted">
+                {hasFilters
+                  ? "No applications match your filters."
+                  : "No applications yet."}
+              </p>
+            </div>
+          ) : (
+            paginatedItems.map((app) => {
+              const status = effectiveStatus(app);
+              const phone = `${app.basicInfo.phoneCountryCode || ""} ${app.basicInfo.phoneNumber || ""}`.trim();
+              return (
+                <div
+                  key={app.referenceId}
+                  className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+                >
+                  {/* Card header */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-slate-50/60 border-b border-slate-100">
+                    <span className="font-mono text-xs font-bold text-foreground tracking-wide">
+                      {app.referenceId}
+                    </span>
+                    {statusBadge(status)}
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Applicant</p>
+                        <p className="font-semibold text-foreground">{app.basicInfo.fullName || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Phone</p>
+                        <p className="font-medium text-foreground flex items-center gap-1">
+                          <Phone className="h-3 w-3 text-foreground-muted shrink-0" />
+                          {phone || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Email</p>
+                        <p className="text-xs text-foreground truncate">{app.basicInfo.email || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Visa</p>
+                        <p className="font-medium text-foreground flex items-center gap-1">
+                          <FileText className="h-3 w-3 text-foreground-muted shrink-0" />
+                          {app.visaType}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Route</p>
+                        <p className="text-xs text-foreground flex items-center gap-1">
+                          <Globe className="h-3 w-3 text-foreground-muted shrink-0" />
+                          {resolveCountry(app.originCountry)} → {resolveCountry(app.destinationCountry)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Amount</p>
+                        <p className="font-bold text-foreground">${app.amount.toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-9 text-xs"
+                        onClick={() => setSelectedApp(app)}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        View
+                      </Button>
+                      {status !== "completed" && (
+                        <>
+                          {status !== "under_review" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={updating === app.referenceId}
+                              onClick={() => updateStatus(app.referenceId, "under_review")}
+                              className="flex-1 h-9 text-xs"
+                            >
+                              {updating === app.referenceId ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                "Review"
+                              )}
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={updating === app.referenceId}
+                            onClick={() => updateStatus(app.referenceId, "completed")}
+                            className="flex-1 h-9 text-xs text-green-600 hover:text-green-700 border-green-200 hover:bg-green-50"
+                          >
+                            {updating === app.referenceId ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              "Complete"
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Applications — Desktop Table */}
+        <div className="hidden lg:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Ref ID</th>
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Applicant</th>
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Visa</th>
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Route</th>
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Status</th>
-                  <th className="text-center px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Details</th>
-                  <th className="text-right px-4 py-3 font-medium text-foreground-muted text-xs uppercase tracking-wider">Actions</th>
+                <tr className="border-b border-slate-100 bg-slate-50/60">
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Ref ID</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Applicant</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Phone</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Visa</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Route</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Amount</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Status</th>
+                  <th className="text-center px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider w-16">View</th>
+                  <th className="text-right px-5 py-3.5 font-semibold text-foreground-muted text-[11px] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {paginatedItems.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-sm text-foreground-muted">
+                    <td colSpan={9} className="px-5 py-16 text-center text-sm text-foreground-muted">
+                      <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                       {hasFilters
                         ? "No applications match your filters."
                         : "No applications yet."}
@@ -454,30 +577,39 @@ export default function AdminDashboard() {
                 ) : (
                   paginatedItems.map((app) => {
                     const status = effectiveStatus(app);
+                    const phone = `${app.basicInfo.phoneCountryCode || ""} ${app.basicInfo.phoneNumber || ""}`.trim();
                     return (
-                      <tr key={app.referenceId} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="font-mono text-xs font-medium text-foreground">
+                      <tr key={app.referenceId} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <span className="font-mono text-xs font-semibold text-foreground tracking-wide">
                             {app.referenceId}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3.5">
                           <div>
-                            <p className="font-medium text-foreground text-sm">
+                            <p className="font-semibold text-foreground text-sm">
                               {app.basicInfo.fullName || "—"}
                             </p>
-                            <p className="text-xs text-foreground-muted">
+                            <p className="text-xs text-foreground-muted mt-0.5">
                               {app.basicInfo.email || "—"}
                             </p>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
+                            <span className="text-sm text-foreground font-medium whitespace-nowrap">
+                              {phone || "—"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-1.5">
                             <FileText className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
                             <span className="text-sm text-foreground">{app.visaType}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-1.5">
                             <Globe className="h-3.5 w-3.5 text-foreground-muted shrink-0" />
                             <span className="text-xs text-foreground whitespace-nowrap">
@@ -485,25 +617,25 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="font-medium text-foreground">
+                        <td className="px-5 py-3.5">
+                          <span className="font-semibold text-foreground">
                             ${app.amount.toLocaleString()}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3.5">
                           {statusBadge(status)}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-5 py-3.5 text-center">
                           <button
                             onClick={() => setSelectedApp(app)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-primary hover:bg-primary/5 transition-colors"
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-xl text-foreground-muted hover:text-primary hover:bg-primary/5 transition-colors"
                             title="View details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        <td className="px-5 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             {status !== "completed" && (
                               <>
                                 {status !== "under_review" && (
@@ -512,7 +644,7 @@ export default function AdminDashboard() {
                                     size="sm"
                                     disabled={updating === app.referenceId}
                                     onClick={() => updateStatus(app.referenceId, "under_review")}
-                                    className="text-xs h-8"
+                                    className="text-xs h-8 rounded-lg"
                                   >
                                     {updating === app.referenceId ? (
                                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -526,7 +658,7 @@ export default function AdminDashboard() {
                                   size="sm"
                                   disabled={updating === app.referenceId}
                                   onClick={() => updateStatus(app.referenceId, "completed")}
-                                  className="text-xs h-8 text-green-600 hover:text-green-700"
+                                  className="text-xs h-8 rounded-lg text-green-600 hover:text-green-700 hover:bg-green-50"
                                 >
                                   {updating === app.referenceId ? (
                                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -537,7 +669,7 @@ export default function AdminDashboard() {
                               </>
                             )}
                             {status === "completed" && (
-                              <span className="text-xs text-foreground-muted">—</span>
+                              <span className="text-xs text-foreground-muted px-2">—</span>
                             )}
                           </div>
                         </td>
@@ -547,58 +679,58 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
-
-            {/* Pagination */}
-            {filtered.length > itemsPerPage && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-                <p className="text-xs text-foreground-muted">
-                  Showing {(currentPage - 1) * itemsPerPage + 1}–
-                  {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage <= 1}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                    let pageNum: number;
-                    if (totalPages <= 7) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 4) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 3) {
-                      pageNum = totalPages - 6 + i;
-                    } else {
-                      pageNum = currentPage - 3 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`inline-flex items-center justify-center h-8 w-8 rounded-lg text-xs font-medium transition-colors ${
-                          currentPage === pageNum
-                            ? "bg-primary text-white"
-                            : "text-foreground-muted hover:text-foreground hover:bg-slate-200/50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage >= totalPages}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Pagination */}
+          {filtered.length > itemsPerPage && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-slate-100 bg-slate-50/60">
+              <p className="text-xs text-foreground-muted">
+                Showing {(currentPage - 1) * itemsPerPage + 1}–
+                {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`inline-flex items-center justify-center h-8 w-8 rounded-lg text-xs font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-white shadow-sm"
+                          : "text-foreground-muted hover:text-foreground hover:bg-slate-200/50"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-foreground-muted hover:text-foreground hover:bg-slate-200/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
