@@ -23,6 +23,7 @@ interface VughyVisaDetail {
   entry_type?: string;
   visa_type_id?: string;
   description?: string;
+  visa_fee_seprate?: string;
 }
 
 function parsePrice(val: string | undefined): number {
@@ -33,14 +34,16 @@ function parsePrice(val: string | undefined): number {
 function normalizeVisa(raw: VughyVisaDetail): VisaCard {
   const visaFee = parsePrice(raw.price ?? raw.visa_fee);
   const serviceFee = parsePrice(raw.service_charge ?? raw.service_fee);
+  const feeSeparate = raw.visa_fee_seprate === "1";
 
   return {
     id: Number(raw.id ?? 0),
     visaTypeId: Number(raw.visa_type_id ?? 0),
     visaType: raw.type_of_visa ?? raw.visa_type_name ?? raw.visa_type ?? "Unknown",
-    visaFee,
+    visaFee: feeSeparate ? 0 : visaFee,
     serviceFee,
-    totalFee: visaFee + serviceFee,
+    totalFee: feeSeparate ? serviceFee : visaFee + serviceFee,
+    visaFeeSeparate: feeSeparate,
     processingTime: raw.time_to_get_visa ?? raw.processing_time ?? "N/A",
     validity: raw.visa_validity ?? "N/A",
     stayDuration: raw.length_of_stay ?? raw.stay_duration ?? "N/A",

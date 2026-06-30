@@ -5,6 +5,7 @@ export interface VisaCard {
   visaFee: number;
   serviceFee: number;
   totalFee: number;
+  visaFeeSeparate: boolean;
   processingTime: string;
   validity: string;
   stayDuration: string;
