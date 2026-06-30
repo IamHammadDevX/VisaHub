@@ -31,15 +31,18 @@ export async function POST(req: NextRequest) {
             visaid: visaId,
             intersted_country: String(destinationCountry),
           });
-          // Response may be { message: [{...}] } or direct array
-          const feeRows: Record<string, unknown>[] =
-            (feesData as { message?: Record<string, unknown>[] }).message ??
-            (Array.isArray(feesData) ? (feesData as Record<string, unknown>[]) : []);
-          const feeRow = feeRows[0] ?? {};
+          // API returns { status: true, visaservice: { amount, service_amount, visa_fee_seprate } }
+          const feeRow =
+            (feesData as { visaservice?: Record<string, unknown> }).visaservice ??
+            (feesData as { message?: Record<string, unknown>[] }).message?.[0] ??
+            {};
 
           return {
             ...visa,
             // Override pricing from Getvisaservicefees (authoritative)
+            // Set both camelCase and snake_case so normalizeVisa picks correct values
+            price: feeRow.amount ?? visa.price,
+            service_charge: feeRow.service_amount ?? visa.service_charge,
             visa_fee: feeRow.amount ?? visa.visa_fee,
             service_fee: feeRow.service_amount ?? visa.service_fee,
             visa_fee_seprate: feeRow.visa_fee_seprate ?? "0",
