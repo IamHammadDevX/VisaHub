@@ -2,8 +2,8 @@
 
 import countries from "world-countries";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { ArrowLeft, AlertTriangle, Loader2, UserRound } from "lucide-react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, AlertTriangle, Check, ChevronsUpDown, Loader2, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,39 @@ function ApplyContent() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneDropdownOpen, setPhoneDropdownOpen] = useState(false);
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const phoneDropdownRef = useRef<HTMLDivElement>(null);
+  const phoneSearchRef = useRef<HTMLInputElement>(null);
+
+  const filteredPhoneCountries = useMemo(() => {
+    if (!phoneSearch.trim()) return phoneCountries;
+    const q = phoneSearch.toLowerCase();
+    return phoneCountries.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.code.includes(phoneSearch)
+    );
+  }, [phoneSearch]);
+
+  const selectedPhoneCountry = phoneCountries.find(
+    (c) => c.code === basicInfo.phoneCountryCode
+  );
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (phoneDropdownRef.current && !phoneDropdownRef.current.contains(e.target as Node)) {
+        setPhoneDropdownOpen(false);
+        setPhoneSearch("");
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (phoneDropdownOpen && phoneSearchRef.current) {
+      phoneSearchRef.current.focus();
+    }
+  }, [phoneDropdownOpen]);
 
   const today = new Date();
   const yesterday = new Date(today);
@@ -171,18 +204,71 @@ function ApplyContent() {
           </Field>
 
           <Field label="Country Code">
-            <select
-              value={basicInfo.phoneCountryCode}
-              onChange={(e) => updateField("phoneCountryCode", e.target.value)}
-              className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-              required
-            >
-              {phoneCountries.map((country) => (
-                <option key={`${country.name}-${country.code}`} value={country.code}>
-                  {country.flag} {country.name} ({country.code})
-                </option>
-              ))}
-            </select>
+            <div ref={phoneDropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setPhoneDropdownOpen(!phoneDropdownOpen)}
+                className="flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-foreground hover:border-slate-300 transition-colors"
+              >
+                {selectedPhoneCountry ? (
+                  <span className="flex items-center gap-2 truncate">
+                    <span className="text-lg shrink-0">{selectedPhoneCountry.flag}</span>
+                    <span className="font-medium truncate">
+                      {selectedPhoneCountry.name} ({selectedPhoneCountry.code})
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-foreground-muted">Select country code</span>
+                )}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-foreground-muted/60" />
+              </button>
+
+              {phoneDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-2xl">
+                  <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+                    <Search className="h-4 w-4 text-foreground-muted shrink-0" />
+                    <input
+                      ref={phoneSearchRef}
+                      value={phoneSearch}
+                      onChange={(e) => setPhoneSearch(e.target.value)}
+                      placeholder="Search country or code..."
+                      className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-muted/50"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto p-1">
+                    {filteredPhoneCountries.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-foreground-muted">
+                        No countries match
+                      </div>
+                    ) : (
+                      filteredPhoneCountries.map((c) => (
+                        <button
+                          key={`${c.name}-${c.code}`}
+                          type="button"
+                          onClick={() => {
+                            updateField("phoneCountryCode", c.code);
+                            setPhoneDropdownOpen(false);
+                            setPhoneSearch("");
+                          }}
+                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-colors hover:bg-slate-100 ${
+                            basicInfo.phoneCountryCode === c.code
+                              ? "bg-primary/10 text-primary font-medium"
+                              : ""
+                          }`}
+                        >
+                          <span className="text-lg shrink-0">{c.flag}</span>
+                          <span className="flex-1 truncate">{c.name}</span>
+                          <span className="text-xs text-foreground-muted font-mono shrink-0">{c.code}</span>
+                          {basicInfo.phoneCountryCode === c.code && (
+                            <Check className="h-4 w-4 shrink-0" />
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </Field>
 
           <Field label="Phone Number">
