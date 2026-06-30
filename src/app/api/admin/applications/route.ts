@@ -16,21 +16,30 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { referenceId, status } = await req.json();
+    const { referenceId, status, adminNotes } = await req.json();
 
-    if (!referenceId || !status) {
+    if (!referenceId) {
       return NextResponse.json(
-        { error: "referenceId and status are required" },
+        { error: "referenceId is required" },
         { status: 400 }
       );
     }
 
-    const validStatuses = ["payment_pending", "paid", "progress", "under_review", "completed"];
-    if (!validStatuses.includes(status)) {
+    if (!status && adminNotes === undefined) {
       return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
+        { error: "status or adminNotes is required" },
         { status: 400 }
       );
+    }
+
+    if (status) {
+      const validStatuses = ["payment_pending", "paid", "progress", "under_review", "completed"];
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json(
+          { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
+          { status: 400 }
+        );
+      }
     }
 
     const stripe = getStripe();
@@ -43,12 +52,21 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
+    const metadataUpdate: Record<string, string> = {
+      ...(session.metadata || {}),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (status) {
+      metadataUpdate.status = status;
+    }
+
+    if (adminNotes !== undefined) {
+      metadataUpdate.adminNotes = String(adminNotes);
+    }
+
     const updated = await stripe.checkout.sessions.update(session.id, {
-      metadata: {
-        ...(session.metadata || {}),
-        status,
-        updatedAt: new Date().toISOString(),
-      },
+      metadata: metadataUpdate,
     });
 
     return NextResponse.json(sessionToApplication(updated));

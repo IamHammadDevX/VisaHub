@@ -39,13 +39,16 @@ function TrackContent() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Application not found");
 
-        // Check localStorage for status overrides (set by admin)
+        // Check localStorage for status overrides + admin notes (set by admin)
         const stored = localStorage.getItem(`visaApp_${urlRef}`);
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
             if (parsed.localStatus || parsed.status) {
               data.status = parsed.localStatus || parsed.status;
+            }
+            if (parsed.adminNotes) {
+              data.adminNotes = parsed.adminNotes;
             }
           } catch { /* ignore */ }
         }
@@ -77,13 +80,16 @@ function TrackContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Application not found");
 
-      // Check localStorage for status overrides (set by admin)
+      // Check localStorage for status overrides + admin notes (set by admin)
       const stored = localStorage.getItem(`visaApp_${ref}`);
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
           if (parsed.localStatus || parsed.status) {
             data.status = parsed.localStatus || parsed.status;
+          }
+          if (parsed.adminNotes) {
+            data.adminNotes = parsed.adminNotes;
           }
         } catch { /* ignore */ }
       }
@@ -246,6 +252,26 @@ function TrackContent() {
               </Link>
             )}
           </div>
+
+          {/* Admin Notes */}
+          {application.adminNotes && (
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground">
+                  Important Update from Our Team
+                </h4>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {application.adminNotes}
+              </p>
+              <p className="text-xs text-foreground-muted mt-3">
+                Please review the note above. Contact us if you have any questions.
+              </p>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h4 className="text-sm font-semibold text-foreground mb-4">

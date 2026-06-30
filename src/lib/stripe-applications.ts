@@ -73,6 +73,7 @@ export function sessionToApplication(
     amount: (session.amount_total || 0) / 100,
     status,
     basicInfo,
+    adminNotes: metadataValue(metadata, "adminNotes"),
     receiptSent: metadataValue(metadata, "receiptSent") === "true",
     createdAt: new Date(session.created * 1000).toISOString(),
     updatedAt: metadataValue(metadata, "updatedAt") || new Date().toISOString(),

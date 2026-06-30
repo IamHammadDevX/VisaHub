@@ -30,6 +30,7 @@ export interface StoredApplication {
   basicInfo: BasicInfo;
   detailedForm?: Record<string, string>;
   receiptSent?: boolean;
+  adminNotes?: string;
   createdAt: string;
   updatedAt: string;
   paidAt?: string;
