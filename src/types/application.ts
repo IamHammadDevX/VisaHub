@@ -26,6 +26,7 @@ export interface StoredApplication {
   originCountry: string;
   destinationCountry: string;
   amount: number;
+  currency: string;
   status: ApplicationStatus;
   basicInfo: BasicInfo;
   detailedForm?: Record<string, string>;

@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { getCurrencySymbol } from "@/lib/currency";
 import {
   Dialog,
   DialogContent,
@@ -368,8 +369,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Finance Overview Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -396,17 +397,6 @@ export default function AdminDashboard() {
             </div>
             <p className="text-2xl font-bold text-foreground">{progressApps + underReviewApps}</p>
             <p className="text-xs text-foreground-muted">In Progress</p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Banknote className="h-4 w-4 text-blue-600" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              ${totalRevenue.toLocaleString()}
-            </p>
-            <p className="text-xs text-foreground-muted">Total Revenue</p>
           </div>
         </div>
 
@@ -581,7 +571,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-[11px] text-foreground-muted uppercase tracking-wider mb-0.5">Amount</p>
-                        <p className="font-bold text-foreground">${app.amount.toLocaleString()}</p>
+                        <p className="font-bold text-foreground">{getCurrencySymbol(app.currency || "usd")}{app.amount.toLocaleString()}</p>
                       </div>
                     </div>
 
@@ -716,7 +706,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-3 py-3">
                         <span className="font-semibold text-foreground whitespace-nowrap">
-                          ${app.amount.toLocaleString()}
+                          {getCurrencySymbol(app.currency || "usd")}{app.amount.toLocaleString()}
                         </span>
                       </td>
                       <td className="px-3 py-3">
@@ -920,7 +910,7 @@ export default function AdminDashboard() {
                   <Row label="Visa Type" value={selectedApp.visaType} highlight />
                   <Row label="Origin" value={resolveCountry(selectedApp.originCountry)} />
                   <Row label="Destination" value={resolveCountry(selectedApp.destinationCountry)} highlight />
-                  <Row label="Amount" value={`$${selectedApp.amount.toLocaleString()}.00`} highlight />
+                  <Row label="Amount" value={`${getCurrencySymbol(selectedApp.currency || "usd")}${selectedApp.amount.toLocaleString()}.00`} highlight />
                   <Row label="Status" value={selectedApp.status.replace("_", " ")} />
                 </div>
               </div>

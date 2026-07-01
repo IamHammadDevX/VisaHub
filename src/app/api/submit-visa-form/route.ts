@@ -70,13 +70,32 @@ export async function POST(req: NextRequest) {
 
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(existing.sessionId || "");
+    const metadataUpdate: Record<string, string> = {
+      ...(session.metadata || {}),
+      formSubmitted: "true",
+      submittedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Store form data in metadata (JSON stringified)
+    try {
+      const formJson = JSON.stringify(formData);
+      if (formJson.length <= 500) {
+        metadataUpdate.detailedForm = formJson;
+      } else {
+        // Split across multiple keys if too large
+        const chunks = formJson.match(/.{1,500}/g) || [];
+        chunks.forEach((chunk, i) => {
+          metadataUpdate[`df${i}`] = chunk;
+        });
+        metadataUpdate.dfChunks = String(chunks.length);
+      }
+    } catch {
+      // If JSON fails, skip storing form data in metadata
+    }
+
     const updated = await stripe.checkout.sessions.update(existing.sessionId || "", {
-      metadata: {
-        ...(session.metadata || {}),
-        formSubmitted: "true",
-        submittedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
+      metadata: metadataUpdate,
     });
 
     return NextResponse.json({

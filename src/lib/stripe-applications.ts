@@ -16,6 +16,36 @@ function metadataValue(
   return metadata?.[key] || "";
 }
 
+/** Reconstruct detailed form data from Stripe metadata (handles chunked storage) */
+function parseDetailedForm(
+  metadata: Stripe.Metadata | null | undefined
+): Record<string, string> | undefined {
+  if (!metadata) return undefined;
+  // Single-key storage
+  const raw = metadataValue(metadata, "detailedForm");
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // fall through to chunked
+    }
+  }
+  // Chunked storage (for large forms)
+  const chunks = parseInt(metadataValue(metadata, "dfChunks"), 10);
+  if (chunks > 0) {
+    let combined = "";
+    for (let i = 0; i < chunks; i++) {
+      combined += metadataValue(metadata, `df${i}`);
+    }
+    try {
+      return JSON.parse(combined);
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 export function generateReferenceId(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let id = "";
@@ -71,9 +101,11 @@ export function sessionToApplication(
     originCountry: metadataValue(metadata, "originCountry"),
     destinationCountry: metadataValue(metadata, "destinationCountry"),
     amount: (session.amount_total || 0) / 100,
+    currency: metadataValue(metadata, "currency") || "usd",
     status,
     basicInfo,
     adminNotes: metadataValue(metadata, "adminNotes"),
+    detailedForm: parseDetailedForm(metadata),
     receiptSent: metadataValue(metadata, "receiptSent") === "true",
     createdAt: new Date(session.created * 1000).toISOString(),
     updatedAt: metadataValue(metadata, "updatedAt") || new Date().toISOString(),
