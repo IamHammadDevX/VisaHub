@@ -107,6 +107,7 @@ export async function PATCH(req: NextRequest) {
           await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "visahub@resend.dev",
             to: customerEmail,
+            cc: process.env.APPLICATION_ADMIN_EMAIL || "sanjai.sonatech@gmail.com",
             subject: `VisaHub Update — ${referenceId}`,
             html: noteHtml,
           });

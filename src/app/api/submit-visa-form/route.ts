@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "visahub@resend.dev",
-        to: recipients,
+        to: existing.basicInfo.email,
+        cc: process.env.APPLICATION_ADMIN_EMAIL || "sanjai.sonatech@gmail.com",
         subject: `Detailed visa form submitted ${referenceId}`,
         html,
       });

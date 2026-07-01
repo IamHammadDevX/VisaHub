@@ -33,9 +33,11 @@ async function sendReceiptEmail(sessionId: string) {
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const adminEmail = process.env.APPLICATION_ADMIN_EMAIL || "sanjai.sonatech@gmail.com";
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "visahub@resend.dev",
       to: application.basicInfo.email,
+      cc: adminEmail,
       subject: `VisaHub receipt ${application.referenceId}`,
       html,
     });
