@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || "visahub@resend.dev",
         to: email,
+        cc: process.env.APPLICATION_ADMIN_EMAIL || "sanjai.sonatech@gmail.com",
         subject: `Visa Application Confirmed — ${referenceId}`,
         html,
       });

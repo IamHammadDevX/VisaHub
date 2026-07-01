@@ -48,10 +48,6 @@ export async function POST(req: NextRequest) {
       formData,
       trackLink,
     });
-    const recipients = [
-      existing.basicInfo.email,
-      process.env.APPLICATION_ADMIN_EMAIL,
-    ].filter(Boolean) as string[];
 
     try {
       const { Resend } = await import("resend");
