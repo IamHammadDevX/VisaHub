@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const {
       amount,
+      currency,
       visaType,
       visaId,
       visaTypeId,
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: currency || "usd",
             product_data: {
               name: `${visaType || "Visa"} Application`,
               description: `Ref: ${referenceId} | Visa #${visaId}`,
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
         originCountry: String(originCountry || ""),
         destinationCountry: String(destinationCountry || ""),
         visaType: String(visaType || ""),
+        currency: String(currency || "usd"),
         fullName: String(basicInfo.fullName || ""),
         email: String(basicInfo.email || ""),
         phoneCountryCode: String(basicInfo.phoneCountryCode || ""),

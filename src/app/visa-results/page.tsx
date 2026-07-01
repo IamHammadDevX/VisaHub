@@ -11,6 +11,9 @@ import { VisaCard } from "@/components/visa/visa-card";
 import { VisaCardSkeletonGrid } from "@/components/visa/visa-card-skeleton";
 import { ErrorState } from "@/components/visa/error-state";
 import { EmptyState } from "@/components/visa/empty-state";
+import { getCurrencyByCountryName } from "@/lib/currency";
+import type { VisaCard as VisaCardType } from "@/types/visa";
+import { useMemo } from "react";
 
 function VisaResultsContent() {
   const searchParams = useSearchParams();
@@ -33,6 +36,14 @@ function VisaResultsContent() {
   const destName = countries?.find((c) => c.id === Number(destination))?.name;
   const originFlag = countries?.find((c) => c.id === Number(origin))?.flag;
   const destFlag = countries?.find((c) => c.id === Number(destination))?.flag;
+
+  // Enrich visas with currency from origin country
+  const enrichedVisas = useMemo<VisaCardType[] | undefined>(() => {
+    if (!visas || !originName) return visas;
+    const currencyInfo = getCurrencyByCountryName(originName);
+    const currencyCode = currencyInfo?.code ?? "usd";
+    return visas.map((v) => ({ ...v, currency: currencyCode }));
+  }, [visas, originName]);
 
   // No params provided
   if (!params) {
@@ -76,8 +87,8 @@ function VisaResultsContent() {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             {isLoading
               ? "Searching visa options..."
-              : visas && visas.length > 0
-                ? `${visas.length} Visa Option${visas.length > 1 ? "s" : ""} Found`
+              : enrichedVisas && enrichedVisas.length > 0
+                ? `${enrichedVisas.length} Visa Option${enrichedVisas.length > 1 ? "s" : ""} Found`
                 : "Visa Options"}
           </h1>
           <p className="text-sm text-foreground-muted mt-1">
@@ -110,12 +121,12 @@ function VisaResultsContent() {
       )}
 
       {/* Empty */}
-      {!isLoading && !isError && visas?.length === 0 && <EmptyState />}
+      {!isLoading && !isError && enrichedVisas?.length === 0 && <EmptyState />}
 
       {/* Results */}
-      {!isLoading && !isError && visas && visas.length > 0 && (
+      {!isLoading && !isError && enrichedVisas && enrichedVisas.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {visas.map((visa, i) => (
+          {enrichedVisas.map((visa, i) => (
             <VisaCard key={visa.visaTypeId} visa={visa} index={i} originCountry={Number(origin)} destinationCountry={Number(destination)} />
           ))}
         </div>

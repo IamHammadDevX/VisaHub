@@ -32,6 +32,7 @@ function ApplyContent() {
   const visaTypeId = searchParams.get("visaTypeId") || "";
   const visaType = searchParams.get("visaType") || "Visa";
   const amount = Number(searchParams.get("totalFee") || 0);
+  const currency = searchParams.get("currency") || "usd";
 
   const [basicInfo, setBasicInfo] = useState({
     fullName: "",
@@ -116,6 +117,7 @@ function ApplyContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
+          currency,
           visaType,
           visaId,
           visaTypeId,

@@ -44,6 +44,7 @@ function normalizeVisa(raw: VughyVisaDetail): VisaCard {
     serviceFee,
     totalFee: feeSeparate ? serviceFee : visaFee + serviceFee,
     visaFeeSeparate: feeSeparate,
+    currency: "usd",
     processingTime: raw.time_to_get_visa ?? raw.processing_time ?? "N/A",
     validity: raw.visa_validity ?? "N/A",
     stayDuration: raw.length_of_stay ?? raw.stay_duration ?? "N/A",

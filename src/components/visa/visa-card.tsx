@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { useVisaDocuments } from "@/hooks/useVisaDocuments";
 import type { ComponentType } from "react";
 import type { VisaCard as VisaCardType } from "@/types/visa";
+import { formatCurrencyByCode, getCurrencySymbol } from "@/lib/currency";
 
 interface VisaCardProps {
   visa: VisaCardType;
@@ -59,7 +60,7 @@ export function VisaCard({
 
   function goToApply() {
     router.push(
-      `/apply?visaId=${visa.id}&originCountry=${originCountry}&destinationCountry=${destinationCountry}&visaTypeId=${visa.visaTypeId}&visaType=${encodeURIComponent(visa.visaType)}&totalFee=${visa.totalFee}`
+      `/apply?visaId=${visa.id}&originCountry=${originCountry}&destinationCountry=${destinationCountry}&visaTypeId=${visa.visaTypeId}&visaType=${encodeURIComponent(visa.visaType)}&totalFee=${visa.totalFee}&currency=${visa.currency}`
     );
   }
 
@@ -121,9 +122,9 @@ export function VisaCard({
               {visa.totalFee > 0 ? (
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-black tracking-tight text-foreground">
-                    ${visa.totalFee.toLocaleString()}
+                    {formatCurrencyByCode(visa.totalFee, visa.currency)}
                   </span>
-                  <span className="pb-1 text-sm text-foreground-muted">USD</span>
+                  <span className="pb-1 text-sm text-foreground-muted uppercase">{visa.currency}</span>
                 </div>
               ) : (
                 <span className="text-lg font-semibold text-foreground">
@@ -137,14 +138,14 @@ export function VisaCard({
                 <VisaFact
                   icon={DollarSign}
                   label="Visa fee"
-                  value={`$${visa.visaFee.toLocaleString()}`}
+                  value={formatCurrencyByCode(visa.visaFee, visa.currency)}
                 />
               )}
               {visa.serviceFee > 0 && (
                 <VisaFact
                   icon={Shield}
                   label="Service fee"
-                  value={`$${visa.serviceFee.toLocaleString()}`}
+                  value={formatCurrencyByCode(visa.serviceFee, visa.currency)}
                 />
               )}
               {visa.validity !== "N/A" && (
