@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import type { ApplicationStatus, BasicInfo, StoredApplication } from "@/types/application";
+import type { AdminNote, ApplicationStatus, BasicInfo, StoredApplication } from "@/types/application";
 
 export function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -44,6 +44,23 @@ function parseDetailedForm(
     }
   }
   return undefined;
+}
+
+/** Parse admin notes from metadata — supports legacy plain string + new JSON array */
+function parseAdminNotes(
+  metadata: Stripe.Metadata | null | undefined
+): AdminNote[] {
+  const raw = metadataValue(metadata, "adminNotes");
+  if (!raw) return [];
+  // New format: JSON array
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as AdminNote[];
+  } catch {
+    // Not JSON — legacy plain string
+  }
+  // Legacy format: plain string → wrap as single note
+  return [{ text: raw, timestamp: "" }];
 }
 
 export function generateReferenceId(): string {
@@ -104,7 +121,7 @@ export function sessionToApplication(
     currency: metadataValue(metadata, "currency") || "usd",
     status,
     basicInfo,
-    adminNotes: metadataValue(metadata, "adminNotes"),
+    adminNotes: parseAdminNotes(metadata),
     detailedForm: parseDetailedForm(metadata),
     receiptSent: metadataValue(metadata, "receiptSent") === "true",
     createdAt: new Date(session.created * 1000).toISOString(),

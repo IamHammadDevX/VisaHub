@@ -47,7 +47,7 @@ function TrackContent() {
             if (parsed.localStatus || parsed.status) {
               data.status = parsed.localStatus || parsed.status;
             }
-            if (parsed.adminNotes) {
+            if (parsed.adminNotes && Array.isArray(parsed.adminNotes)) {
               data.adminNotes = parsed.adminNotes;
             }
           } catch { /* ignore */ }
@@ -88,7 +88,7 @@ function TrackContent() {
           if (parsed.localStatus || parsed.status) {
             data.status = parsed.localStatus || parsed.status;
           }
-          if (parsed.adminNotes) {
+          if (parsed.adminNotes && Array.isArray(parsed.adminNotes)) {
             data.adminNotes = parsed.adminNotes;
           }
         } catch { /* ignore */ }
@@ -254,7 +254,7 @@ function TrackContent() {
           </div>
 
           {/* Admin Notes — only show when unresolved (not completed) */}
-          {application.adminNotes && application.status !== "completed" && (
+          {application.adminNotes && application.adminNotes.length > 0 && application.status !== "completed" && (
             <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-8 w-8 rounded-lg bg-amber-200/60 flex items-center justify-center">
@@ -264,9 +264,23 @@ function TrackContent() {
                   Important Update from Our Team
                 </h4>
               </div>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                {application.adminNotes}
-              </p>
+              <div className="space-y-3">
+                {[...application.adminNotes].reverse().map((n, i) => (
+                  <div key={i} className="text-sm text-foreground leading-relaxed whitespace-pre-wrap border-b border-amber-100 pb-2 last:border-b-0 last:pb-0">
+                    {n.text}
+                    {n.timestamp && (
+                      <p className="text-[11px] text-foreground-muted mt-1">
+                        {new Date(n.timestamp).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
               <p className="text-xs text-foreground-muted mt-3">
                 Please review the note above. Contact us if you have any questions.
               </p>

@@ -5,6 +5,11 @@ export type ApplicationStatus =
   | "under_review"
   | "completed";
 
+export interface AdminNote {
+  text: string;
+  timestamp: string;
+}
+
 export interface BasicInfo {
   fullName: string;
   email: string;
@@ -31,7 +36,7 @@ export interface StoredApplication {
   basicInfo: BasicInfo;
   detailedForm?: Record<string, string>;
   receiptSent?: boolean;
-  adminNotes?: string;
+  adminNotes?: AdminNote[];
   createdAt: string;
   updatedAt: string;
   paidAt?: string;

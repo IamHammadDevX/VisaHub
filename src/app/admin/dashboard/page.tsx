@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { StoredApplication } from "@/types/application";
+import type { AdminNote, StoredApplication } from "@/types/application";
 import type { Country } from "@/types/country";
 
 type AdminApp = StoredApplication & { localStatus?: string };
@@ -108,7 +108,9 @@ export default function AdminDashboard() {
             return {
               ...app,
               localStatus: parsed.status || parsed.localStatus,
-              adminNotes: parsed.adminNotes || app.adminNotes,
+              adminNotes: Array.isArray(parsed.adminNotes)
+                ? parsed.adminNotes
+                : app.adminNotes,
               detailedForm: parsed.detailedForm || app.detailedForm,
             };
           } catch {
@@ -200,29 +202,33 @@ export default function AdminDashboard() {
     updateStatus(refId, "progress");
   }
 
-  function openNoteModal(refId: string, currentNote: string) {
+  function openNoteModal(refId: string) {
     setNoteRefId(refId);
-    setNoteText(currentNote || "");
+    setNoteText("");
     setNoteModalOpen(true);
   }
 
   async function submitNote() {
+    if (!noteText.trim()) return;
     setSavingNote(true);
     try {
       const key = `visaApp_${noteRefId}`;
       const existing = localStorage.getItem(key);
       const data = existing ? JSON.parse(existing) : {};
-      data.adminNotes = noteText;
+      // Append to notes array
+      const prevNotes: AdminNote[] = Array.isArray(data.adminNotes) ? data.adminNotes : [];
+      const newNote: AdminNote = { text: noteText.trim(), timestamp: new Date().toISOString() };
+      data.adminNotes = [...prevNotes, newNote];
       data.updatedAt = new Date().toISOString();
       localStorage.setItem(key, JSON.stringify(data));
 
       await fetch("/api/admin/applications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referenceId: noteRefId, adminNotes: noteText }),
+        body: JSON.stringify({ referenceId: noteRefId, adminNotes: noteText.trim() }),
       }).catch(() => {});
 
-      setNoteModalOpen(false);
+      setNoteText("");
       await fetchApplications();
     } finally {
       setSavingNote(false);
@@ -606,7 +612,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openNoteModal(app.referenceId, app.adminNotes || "")}
+                            onClick={() => openNoteModal(app.referenceId)}
                             className="flex-1 h-9 text-xs"
                           >
                             <StickyNote className="h-3.5 w-3.5 mr-1" />
@@ -743,7 +749,7 @@ export default function AdminDashboard() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => openNoteModal(app.referenceId, app.adminNotes || "")}
+                                onClick={() => openNoteModal(app.referenceId)}
                                 className="text-xs h-7 px-2 rounded-lg"
                               >
                                 <StickyNote className="h-3 w-3 mr-1" />
@@ -831,7 +837,7 @@ export default function AdminDashboard() {
 
       {/* Note Modal */}
       <Dialog open={noteModalOpen} onOpenChange={(open) => !open && setNoteModalOpen(false)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <StickyNote className="h-5 w-5 text-primary" />
@@ -843,22 +849,61 @@ export default function AdminDashboard() {
               <p className="text-xs text-foreground-muted uppercase tracking-wider mb-1">Reference</p>
               <p className="font-mono text-sm font-bold text-foreground tracking-wide">{noteRefId}</p>
             </div>
+
+            {/* New note input */}
             <textarea
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               placeholder="e.g. Passport number incorrect — called customer, awaiting correct passport…"
-              rows={5}
+              rows={4}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-foreground placeholder:text-slate-400 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 resize-none"
             />
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setNoteModalOpen(false)}>
-                Cancel
+                Close
               </Button>
-              <Button size="sm" onClick={submitNote} disabled={savingNote}>
+              <Button size="sm" onClick={submitNote} disabled={savingNote || !noteText.trim()}>
                 {savingNote ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                 Save Note
               </Button>
             </div>
+
+            {/* Note history */}
+            {(() => {
+              const app = applications.find((a) => a.referenceId === noteRefId);
+              const notes = app?.adminNotes;
+              if (!notes || notes.length === 0) return null;
+              return (
+                <div>
+                  <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    Note History ({notes.length})
+                  </h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {[...notes].reverse().map((n, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+                      >
+                        <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                          {n.text}
+                        </p>
+                        {n.timestamp && (
+                          <p className="text-[11px] text-foreground-muted mt-1.5">
+                            {new Date(n.timestamp).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
@@ -934,16 +979,33 @@ export default function AdminDashboard() {
                 )}
 
               {/* Admin Notes */}
-              {selectedApp.adminNotes && (
+              {selectedApp.adminNotes && selectedApp.adminNotes.length > 0 && (
                 <div>
                   <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                    Admin Notes
+                    Admin Notes ({selectedApp.adminNotes.length})
                   </h4>
-                  <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                      {selectedApp.adminNotes}
-                    </p>
+                  <div className="space-y-2">
+                    {[...selectedApp.adminNotes].reverse().map((n, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl border border-amber-100 bg-amber-50/50 p-3"
+                      >
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                          {n.text}
+                        </p>
+                        {n.timestamp && (
+                          <p className="text-[11px] text-foreground-muted mt-1.5">
+                            {new Date(n.timestamp).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

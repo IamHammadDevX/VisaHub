@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, sessionToApplication } from "@/lib/stripe-applications";
-import type { StoredApplication } from "@/types/application";
+import type { AdminNote, StoredApplication } from "@/types/application";
 
 export async function GET() {
   try {
@@ -62,7 +62,24 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (adminNotes !== undefined) {
-      metadataUpdate.adminNotes = String(adminNotes);
+      // Append new note to existing notes array
+      const existingRaw = (session.metadata || {}).adminNotes || "";
+      let notes: AdminNote[] = [];
+      try {
+        const parsed = JSON.parse(existingRaw);
+        if (Array.isArray(parsed)) {
+          notes = parsed as AdminNote[];
+        } else {
+          // Legacy plain string — wrap as single old note
+          notes = [{ text: existingRaw, timestamp: "" }];
+        }
+      } catch {
+        if (existingRaw) {
+          notes = [{ text: existingRaw, timestamp: "" }];
+        }
+      }
+      notes.push({ text: String(adminNotes), timestamp: new Date().toISOString() });
+      metadataUpdate.adminNotes = JSON.stringify(notes);
     }
 
     const updated = await stripe.checkout.sessions.update(session.id, {
