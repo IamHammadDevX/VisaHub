@@ -102,7 +102,7 @@ export function PopularDestinations() {
                   {country.name}
                 </h3>
 
-                <Link href="/" className="block w-full">
+                <Link href={`/?destination=${country.id}#top`} className="block w-full">
                   <Button variant="outline" size="sm" className="w-full text-xs">
                     Select Route
                     <ArrowRight className="ml-1 h-3 w-3" />

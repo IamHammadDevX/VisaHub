@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,7 @@ interface VisaSearchFormProps {
 
 export function VisaSearchForm({ onSearch }: VisaSearchFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     setValue,
     handleSubmit,
@@ -36,6 +37,17 @@ export function VisaSearchForm({ onSearch }: VisaSearchFormProps) {
     resolver: zodResolver(searchSchema),
     mode: "onChange",
   });
+
+  // Pre-fill destination from URL param (e.g., from country card "Select Route")
+  React.useEffect(() => {
+    const destParam = searchParams.get("destination");
+    if (destParam) {
+      const destId = Number(destParam);
+      if (!isNaN(destId)) {
+        setValue("destination", destId, { shouldValidate: true });
+      }
+    }
+  }, [searchParams, setValue]);
 
   const origin = watch("origin");
   const destination = watch("destination");

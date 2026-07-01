@@ -4,7 +4,6 @@ import { VisaCategories } from "@/components/sections/visa-categories";
 import { HowItWorks } from "@/components/sections/how-it-works";
 import { Testimonials } from "@/components/sections/testimonials";
 import { FAQ } from "@/components/sections/faq";
-import { CTA } from "@/components/sections/cta";
 
 export default function Home() {
   return (
@@ -15,7 +14,6 @@ export default function Home() {
       <HowItWorks />
       <Testimonials />
       <FAQ />
-      <CTA />
     </>
   );
 }

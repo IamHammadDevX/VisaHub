@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe, sessionToApplication } from "@/lib/stripe-applications";
+import { buildNoteEmail } from "@/lib/email-template";
 import type { AdminNote, StoredApplication } from "@/types/application";
 
 export async function GET() {
@@ -85,6 +86,36 @@ export async function PATCH(req: NextRequest) {
     const updated = await stripe.checkout.sessions.update(session.id, {
       metadata: metadataUpdate,
     });
+
+    // Send email to customer when admin adds a note
+    if (adminNotes !== undefined) {
+      const app = sessionToApplication(updated);
+      const customerEmail = app.basicInfo.email;
+      if (customerEmail) {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        const trackLink = `${baseUrl}/track?ref=${referenceId}`;
+        const noteHtml = buildNoteEmail({
+          referenceId,
+          visaType: app.visaType,
+          applicantName: app.basicInfo.fullName,
+          noteText: String(adminNotes),
+          trackLink,
+        });
+        try {
+          const { Resend } = await import("resend");
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "visahub@resend.dev",
+            to: customerEmail,
+            subject: `VisaHub Update — ${referenceId}`,
+            html: noteHtml,
+          });
+          console.log(`[VisaHub] Note email sent to ${customerEmail} for ${referenceId}`);
+        } catch (emailErr) {
+          console.error(`[VisaHub] Failed to send note email for ${referenceId}:`, emailErr);
+        }
+      }
+    }
 
     return NextResponse.json(sessionToApplication(updated));
   } catch (error: unknown) {

@@ -275,3 +275,81 @@ export function buildReceiptEmail({
 </body>
 </html>`;
 }
+
+export function buildNoteEmail({
+  referenceId,
+  visaType,
+  applicantName,
+  noteText,
+  trackLink,
+}: {
+  referenceId: string;
+  visaType: string;
+  applicantName?: string;
+  noteText: string;
+  trackLink: string;
+}) {
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0a0b1e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0b1e;padding:40px 20px">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#0f1029;border-radius:16px;border:1px solid rgba(255,255,255,0.06);overflow:hidden">
+      <tr><td style="background:linear-gradient(135deg,#F59E0B,#D97706);padding:30px 40px;text-align:center">
+        <div style="display:inline-flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#F59E0B">V</div>
+          <span style="color:white;font-size:22px;font-weight:700;letter-spacing:-0.5px">VisaHub</span>
+        </div>
+        <p style="color:rgba(255,255,255,0.9);font-size:18px;margin:16px 0 0;font-weight:600">Important Update on Your Application</p>
+      </td></tr>
+
+      <tr><td style="padding:30px 40px;color:#f1f5f9">
+        <p style="font-size:15px;line-height:1.6;margin:0 0 20px;color:#94a3b8">
+          Dear ${applicantName || "Applicant"},<br><br>
+          Our team has added a note to your ${visaType || "visa"} application. Please review and take action if needed.
+        </p>
+
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:12px;padding:16px 20px;margin-bottom:24px">
+          <p style="font-size:11px;color:#F59E0B;margin:0 0 10px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Team Note</p>
+          <p style="font-size:14px;color:#f1f5f9;margin:0;line-height:1.6;white-space:pre-wrap">${noteText}</p>
+          <p style="font-size:11px;color:#64748b;margin:10px 0 0">${formattedDate}</p>
+        </div>
+
+        <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:12px;padding:16px 20px;text-align:center;margin-bottom:24px">
+          <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;text-transform:uppercase;letter-spacing:1px">Reference ID</p>
+          <p style="font-family:monospace;font-size:22px;font-weight:700;color:#06B6D4;margin:0;letter-spacing:2px">${referenceId}</p>
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+          <tr><td align="center">
+            <a href="${trackLink}" style="display:inline-block;background:#F59E0B;color:white;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;letter-spacing:-0.3px">Track Your Application</a>
+          </td></tr>
+        </table>
+
+        <p style="font-size:12px;color:#64748b;text-align:center;line-height:1.6;margin:0">
+          Use your reference ID to track your application status at any time.<br>
+          If you have already resolved the issue, no further action is needed.
+        </p>
+      </td></tr>
+
+      <tr><td style="border-top:1px solid rgba(255,255,255,0.06);padding:20px 40px;text-align:center">
+        <p style="font-size:11px;color:#475569;margin:0">
+          VisaHub &bull; Your Trusted Visa Partner
+        </p>
+        <p style="font-size:11px;color:#334155;margin:0">
+          This is an automated notification. Please do not reply.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
