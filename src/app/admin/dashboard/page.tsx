@@ -112,6 +112,7 @@ export default function AdminDashboard() {
                 ? parsed.adminNotes
                 : app.adminNotes,
               detailedForm: parsed.detailedForm || app.detailedForm,
+              formLabels: parsed.formLabels || app.formLabels,
             };
           } catch {
             return app;
@@ -971,9 +972,10 @@ export default function AdminDashboard() {
                     <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
                       {Object.entries(selectedApp.detailedForm)
                         .filter(([, val]) => val && val.trim())
-                        .map(([key, value]) => (
-                          <Row key={key} label={key} value={value} />
-                        ))}
+                        .map(([key, value]) => {
+                          const label = selectedApp.formLabels?.[key] || key;
+                          return <Row key={key} label={label} value={value} />;
+                        })}
                     </div>
                   </div>
                 )}

@@ -29,6 +29,7 @@ interface VisaCardProps {
   index: number;
   originCountry: number;
   destinationCountry: number;
+  originCountryName?: string;
 }
 
 export function VisaCard({
@@ -36,6 +37,7 @@ export function VisaCard({
   index,
   originCountry,
   destinationCountry,
+  originCountryName,
 }: VisaCardProps) {
   const router = useRouter();
   const { data: documentGroups, isLoading: documentsLoading } = useVisaDocuments({
@@ -59,9 +61,19 @@ export function VisaCard({
       : "from-cyan-500 to-indigo-500";
 
   function goToApply() {
-    router.push(
-      `/apply?visaId=${visa.id}&originCountry=${originCountry}&destinationCountry=${destinationCountry}&visaTypeId=${visa.visaTypeId}&visaType=${encodeURIComponent(visa.visaType)}&totalFee=${visa.totalFee}&currency=${visa.currency}`
-    );
+    const params = new URLSearchParams({
+      visaId: String(visa.id),
+      originCountry: String(originCountry),
+      destinationCountry: String(destinationCountry),
+      visaTypeId: String(visa.visaTypeId),
+      visaType: visa.visaType,
+      totalFee: String(visa.totalFee),
+      currency: visa.currency,
+    });
+    if (originCountryName) {
+      params.set("originCountryName", originCountryName);
+    }
+    router.push(`/apply?${params.toString()}`);
   }
 
   return (

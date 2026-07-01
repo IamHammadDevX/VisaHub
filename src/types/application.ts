@@ -35,6 +35,7 @@ export interface StoredApplication {
   status: ApplicationStatus;
   basicInfo: BasicInfo;
   detailedForm?: Record<string, string>;
+  formLabels?: Record<string, string>;
   receiptSent?: boolean;
   adminNotes?: AdminNote[];
   createdAt: string;

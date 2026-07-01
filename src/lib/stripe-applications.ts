@@ -46,6 +46,19 @@ function parseDetailedForm(
   return undefined;
 }
 
+/** Parse form field labels from metadata */
+function parseFormLabels(
+  metadata: Stripe.Metadata | null | undefined
+): Record<string, string> | undefined {
+  const raw = metadataValue(metadata, "formLabels");
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 /** Parse admin notes from metadata — supports legacy plain string + new JSON array */
 function parseAdminNotes(
   metadata: Stripe.Metadata | null | undefined
@@ -123,6 +136,7 @@ export function sessionToApplication(
     basicInfo,
     adminNotes: parseAdminNotes(metadata),
     detailedForm: parseDetailedForm(metadata),
+    formLabels: parseFormLabels(metadata),
     receiptSent: metadataValue(metadata, "receiptSent") === "true",
     createdAt: new Date(session.created * 1000).toISOString(),
     updatedAt: metadataValue(metadata, "updatedAt") || new Date().toISOString(),

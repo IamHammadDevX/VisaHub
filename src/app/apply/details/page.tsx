@@ -200,10 +200,20 @@ function DetailsContent() {
     setError(null);
 
     try {
+      // Build label map for readable field names
+      const labels: Record<string, string> = {};
+      if (formResponse?.formdata) {
+        Object.values(formResponse.formdata).forEach((fields) => {
+          fields.forEach((f) => {
+            labels[f.label_id] = f.label_name;
+          });
+        });
+      }
+
       const res = await fetch("/api/submit-visa-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referenceId, formData: formValues }),
+        body: JSON.stringify({ referenceId, formData: formValues, formLabels: labels }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit form");
@@ -218,6 +228,7 @@ function DetailsContent() {
         parsed.localStatus = "progress";
         parsed.submittedAt = new Date().toISOString();
         parsed.detailedForm = formValues;
+        parsed.formLabels = labels;
         localStorage.setItem(key, JSON.stringify(parsed));
       }
     } catch (err) {

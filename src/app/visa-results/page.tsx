@@ -127,7 +127,7 @@ function VisaResultsContent() {
       {!isLoading && !isError && enrichedVisas && enrichedVisas.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {enrichedVisas.map((visa, i) => (
-            <VisaCard key={visa.visaTypeId} visa={visa} index={i} originCountry={Number(origin)} destinationCountry={Number(destination)} />
+            <VisaCard key={visa.visaTypeId} visa={visa} index={i} originCountry={Number(origin)} destinationCountry={Number(destination)} originCountryName={originName} />
           ))}
         </div>
       )}

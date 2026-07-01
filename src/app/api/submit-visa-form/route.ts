@@ -7,7 +7,7 @@ import { buildDetailedFormEmail } from "@/lib/email-template";
 
 export async function POST(req: NextRequest) {
   try {
-    const { referenceId, formData } = await req.json();
+    const { referenceId, formData, formLabels } = await req.json();
 
     if (!referenceId || !formData) {
       return NextResponse.json(
@@ -92,6 +92,15 @@ export async function POST(req: NextRequest) {
       }
     } catch {
       // If JSON fails, skip storing form data in metadata
+    }
+
+    // Store form labels in metadata
+    if (formLabels) {
+      try {
+        metadataUpdate.formLabels = JSON.stringify(formLabels);
+      } catch {
+        // skip if serialization fails
+      }
     }
 
     const updated = await stripe.checkout.sessions.update(existing.sessionId || "", {

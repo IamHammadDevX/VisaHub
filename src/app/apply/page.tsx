@@ -34,13 +34,31 @@ function ApplyContent() {
   const visaType = searchParams.get("visaType") || "Visa";
   const amount = Number(searchParams.get("totalFee") || 0);
   const currency = searchParams.get("currency") || "usd";
+  const originCountryName = searchParams.get("originCountryName") || "";
+
+  // Auto-detect phone code and nationality from origin country
+  const detectedPhone = useMemo(() => {
+    if (!originCountryName) return "+1";
+    const match = phoneCountries.find(
+      (c) => c.name.toLowerCase() === originCountryName.toLowerCase()
+    );
+    return match?.code || "+1";
+  }, [originCountryName]);
+
+  const detectedNationality = useMemo(() => {
+    if (!originCountryName) return "";
+    const match = nationalityOptions.find(
+      (n) => n.toLowerCase() === originCountryName.toLowerCase()
+    );
+    return match || "";
+  }, [originCountryName]);
 
   const [basicInfo, setBasicInfo] = useState({
     fullName: "",
     email: "",
-    phoneCountryCode: "+1",
+    phoneCountryCode: detectedPhone,
     phoneNumber: "",
-    nationality: "",
+    nationality: detectedNationality,
     dateOfBirth: "",
     passportNumber: "",
     travelDate: "",
