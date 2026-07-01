@@ -243,11 +243,11 @@ function TrackContent() {
               />
             </div>
 
-            {application.status === "paid" && (
+            {application.status !== "completed" && application.status !== "payment_pending" && (
               <Link href={`/apply/details?ref=${application.referenceId}`}>
                 <Button className="w-full mt-6">
                   <FileText className="mr-2 h-4 w-4" />
-                  Complete Detailed Visa Form
+                  {application.submittedAt ? "Edit Visa Form" : "Complete Detailed Visa Form"}
                 </Button>
               </Link>
             )}
