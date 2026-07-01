@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Globe } from "lucide-react";
 import { VisaSearchForm } from "@/components/search/visa-search-form";
 
@@ -41,7 +42,9 @@ export function HeroSection() {
                   Select your route
                 </span>
               </div>
-              <VisaSearchForm />
+              <Suspense fallback={null}>
+                <VisaSearchForm />
+              </Suspense>
             </div>
           </div>
 
