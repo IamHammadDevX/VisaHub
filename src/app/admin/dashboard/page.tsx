@@ -108,6 +108,7 @@ export default function AdminDashboard() {
               ...app,
               localStatus: parsed.status || parsed.localStatus,
               adminNotes: parsed.adminNotes || app.adminNotes,
+              detailedForm: parsed.detailedForm || app.detailedForm,
             };
           } catch {
             return app;
@@ -923,6 +924,24 @@ export default function AdminDashboard() {
                   <Row label="Status" value={selectedApp.status.replace("_", " ")} />
                 </div>
               </div>
+
+              {/* Detailed Visa Form (Step 3) */}
+              {selectedApp.detailedForm &&
+                Object.keys(selectedApp.detailedForm).length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      Detailed Visa Form
+                    </h4>
+                    <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+                      {Object.entries(selectedApp.detailedForm)
+                        .filter(([, val]) => val && val.trim())
+                        .map(([key, value]) => (
+                          <Row key={key} label={key} value={value} />
+                        ))}
+                    </div>
+                  </div>
+                )}
 
               {/* Admin Notes */}
               {selectedApp.adminNotes && (
