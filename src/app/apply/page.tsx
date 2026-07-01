@@ -7,6 +7,7 @@ import { ArrowLeft, AlertTriangle, Check, ChevronsUpDown, Loader2, Search, UserR
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCurrencySymbol } from "@/lib/currency";
 
 const phoneCountries = countries
   .map((country) => {
@@ -176,7 +177,7 @@ function ApplyContent() {
           <p className="text-sm text-foreground-muted">Step 1 of 3</p>
           <h1 className="text-2xl font-bold text-foreground">Basic Information</h1>
           <p className="text-sm text-foreground-muted">
-            {visaType} application, payment due ${amount.toLocaleString()}.00
+            {visaType} application, payment due {getCurrencySymbol(currency)}{amount.toLocaleString()}.00
           </p>
         </div>
       </div>

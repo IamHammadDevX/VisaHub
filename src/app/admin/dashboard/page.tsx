@@ -254,10 +254,11 @@ export default function AdminDashboard() {
           app.visaType.toLowerCase().includes(q) ||
           originName.includes(q) ||
           destName.includes(q) ||
-          app.basicInfo.fullName.toLowerCase().includes(q) ||
-          app.basicInfo.email.toLowerCase().includes(q) ||
-          app.basicInfo.phoneNumber.includes(q) ||
-          phone.includes(q);
+          (app.basicInfo.fullName || "").toLowerCase().includes(q) ||
+          (app.basicInfo.email || "").toLowerCase().includes(q) ||
+          (app.basicInfo.phoneNumber || "").includes(q) ||
+          phone.includes(q) ||
+          (app.basicInfo.passportNumber || "").includes(q);
         if (!match) return false;
       }
 
@@ -415,7 +416,7 @@ export default function AdminDashboard() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted pointer-events-none" />
               <Input
-                placeholder="Search name, email, phone..."
+                placeholder="Search name, email, phone, passport..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-10 pl-9 text-sm"

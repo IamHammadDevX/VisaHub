@@ -286,7 +286,7 @@ function DetailsContent() {
         <div>
           <p className="text-sm text-foreground-muted">Step 3 of 3</p>
           <h1 className="text-2xl font-bold text-foreground">
-            {formResponse?.visaname?.name || application.visaType}
+            {application.visaType || formResponse?.visaname?.name || "Visa Form"}
           </h1>
           <p className="text-sm text-foreground-muted">
             Receipt ID {referenceId}
